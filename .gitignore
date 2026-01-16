@@ -1,0 +1,19 @@
+# 1. DB 데이터 폴더 (가장 중요!)
+db_data/
+
+# 2. 운영체제 및 에디터 설정 파일
+.DS_Store
+.idea/
+.vscode/
+
+# 3. 프론트엔드 (node_modules는 용량이 너무 커서 올리면 안 됨)
+node_modules/
+dist/
+.env
+
+# 4. 백엔드 (빌드 결과물)
+/server/build/
+/server/out/
+*.class
+
+.yml

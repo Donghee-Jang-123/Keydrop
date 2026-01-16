@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL (메인 데이터베이스)
+  db:
+    image: postgres:15
+    container_name: dj-postgres
+    restart: always
+    ports:
+      - "5432:5432"  
+    environment:
+      POSTGRES_USER: ${DB_USER}        # 아이디
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # 비밀번호
+      POSTGRES_DB: ${DB_NAME}     # DB 이름
+    volumes:
+      - ./db_data:/var/lib/postgresql/data # [중요] 데이터를 내 컴퓨터 폴더에 저장 (컨테이너 꺼져도 데이터 유지)
+
+  # 2. Redis (캐시 및 실시간 데이터)
+  redis:
+    image: redis:alpine
+    container_name: dj-redis
+    restart: always
+    ports:
+      - "6379:6379"
