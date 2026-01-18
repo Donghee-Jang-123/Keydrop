@@ -4,6 +4,7 @@ import { useDJStore } from '../store/useDJStore';
 // 타입 정의 
 type ActionType = 'HOLD' | 'TRIGGER';
 type ControlTarget = 'mid' | 'bass' | 'filter' | 'fader' | 'crossFader' | 'bpm';
+type FxType = 'CRUSH' | 'FLANGER' | 'SLICER' | 'KICK';
 
 interface KeyCommand {
   deck?: 1 | 2;
@@ -55,6 +56,7 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'NUMPAD2': { action: 'FLANGER', type: 'TRIGGER' },
   'NUMPAD4': { action: 'SLICER', type: 'TRIGGER' },
   'NUMPAD5': { action: 'KICK', type: 'TRIGGER' },
+  'NUMPADENTER': { action: 'FX_TOGGLE_DECK', type: 'TRIGGER' },
   
 };
 
@@ -65,6 +67,7 @@ interface AudioEngine {
       adjustParam: (target: ControlTarget, delta: number) => void;
       jumpToCue: (index: number) => void;
       togglePlay: () => void;
+      applyFx: (fx: FxType | null) => void;
     };
   };
   mixer: {
@@ -76,9 +79,10 @@ interface AudioEngine {
 export const useInputManager = (audioEngine: AudioEngine) => {
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
   const requestRef = useRef<number | null>(null);
+  const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
   // Zustand 액션 가져오기
-  const { updateValue, setPlayState } = useDJStore.getState().actions;
+  const { updateValue, setPlayState, toggleFxTargetDeck, setFx } = useDJStore.getState().actions;
 
   // e.code를 KEY_MAP에서 사용하는 문자열로 정규화
   // 예) KeyG -> "G", Digit1 -> "1", Semicolon -> ";", ShiftLeft -> "SHIFTLEFT"
@@ -98,9 +102,21 @@ export const useInputManager = (audioEngine: AudioEngine) => {
       e.preventDefault();
       if (!activeKeys.current.has(keyCode)) {
         activeKeys.current.add(keyCode);
-        if (KEY_MAP[keyCode].type === 'TRIGGER') {
-          executeTriggerAction(KEY_MAP[keyCode]);
+
+        const cmd = KEY_MAP[keyCode];
+
+        // FX 키는 "누르는 동안만 ON" (keydown에서 ON 처리)
+        if (cmd.action === 'CRUSH' || cmd.action === 'FLANGER' || cmd.action === 'SLICER' || cmd.action === 'KICK') {
+          const fx = cmd.action as FxType;
+          const state = useDJStore.getState();
+          const targetDeck = state.fxTargetDeck;
+          activeFxKeyDeck.current.set(keyCode, targetDeck);
+          setFx(fx, targetDeck);
+          audioEngine.decks[targetDeck].applyFx(fx);
+          return;
         }
+
+        if (cmd.type === 'TRIGGER') executeTriggerAction(cmd);
       }
     }
   };
@@ -108,6 +124,17 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   const handleKeyUp = (e: KeyboardEvent) => {
     const keyCode = normalizeKeyCode(e);
     activeKeys.current.delete(keyCode); 
+
+    // FX 키는 keyup에서 OFF 처리
+    const cmd = KEY_MAP[keyCode];
+    if (!cmd) return;
+    if (cmd.action === 'CRUSH' || cmd.action === 'FLANGER' || cmd.action === 'SLICER' || cmd.action === 'KICK') {
+      const deckAtKeyDown = activeFxKeyDeck.current.get(keyCode);
+      if (!deckAtKeyDown) return;
+      activeFxKeyDeck.current.delete(keyCode);
+      setFx(null, deckAtKeyDown);
+      audioEngine.decks[deckAtKeyDown].applyFx(null);
+    }
   };
 
   const updateLoop = () => {
@@ -156,6 +183,13 @@ export const useInputManager = (audioEngine: AudioEngine) => {
     if (command.action === 'UPLOAD') {
       // 여기에 파일을 선택하는 창(Modal)을 띄우는 함수를 연결
       console.log("Deck 1 파일 업로드 모달 오픈!"); 
+    }
+
+    // NUMPAD ENTER: FX 적용 대상 덱 토글 (Deck1 <-> Deck2)
+    if (command.action === 'FX_TOGGLE_DECK') {
+      toggleFxTargetDeck();
+      const next = useDJStore.getState().fxTargetDeck;
+      console.log(`[FX] 적용 대상 덱 변경: Deck ${next}`);
     }
     // BPM 조정 (TRIGGER 방식)
     if (command.target === 'bpm') {

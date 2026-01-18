@@ -2,6 +2,7 @@
 // 지금은 "키 입력 → UI 업데이트"만 확인하기 위한 껍데기
 
 export type ControlTarget = 'mid' | 'bass' | 'filter' | 'fader' | 'crossFader' | 'bpm';
+export type FxType = 'CRUSH' | 'FLANGER' | 'SLICER' | 'KICK';
 
 class DeckController {
   private deckNumber: number;
@@ -11,7 +12,6 @@ class DeckController {
   }
 
   adjustParam(target: ControlTarget, delta: number): void {
-    // 실제 오디오 파라미터 조정은 여기서 구현
     console.log(`[Deck ${this.deckNumber}] ${target} 조정: ${delta > 0 ? '+' : ''}${delta.toFixed(3)}`);
   }
 
@@ -21,6 +21,10 @@ class DeckController {
 
   togglePlay(): void {
     console.log(`[Deck ${this.deckNumber}] 재생/정지 토글`);
+  }
+
+  applyFx(fx: FxType | null): void {
+    console.log(`[Deck ${this.deckNumber}] FX 적용: ${fx ?? 'OFF'}`);
   }
 }
 
