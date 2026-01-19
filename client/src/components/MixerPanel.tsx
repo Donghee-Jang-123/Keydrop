@@ -2,8 +2,11 @@ import React from 'react';
 import { useDJStore } from '../store/useDJStore';
 import Knob from './Knob';
 
-const MixerPanel: React.FC = () => {
-  const bpm = useDJStore((s) => s.bpm);
+type MixerPanelProps = {
+  masterBpm: number;
+};
+
+const MixerPanel: React.FC<MixerPanelProps> = ({ masterBpm }) => {
   const crossFader = useDJStore((s) => s.crossFader);
   const deck1 = useDJStore((s) => s.deck1);
   const deck2 = useDJStore((s) => s.deck2);
@@ -24,7 +27,7 @@ const MixerPanel: React.FC = () => {
   return (
     <section className="mixerPanel" aria-label="Mixer">
       <div className="mixerPanel__bpm">
-        <span className="mixerPanel__bpmBig">{Math.round(bpm)}</span>
+        <span className="mixerPanel__bpmBig">{Math.round(masterBpm)}</span>
         
         <span className="mixerPanel__bpmUnit">BPM</span>
 
