@@ -3,11 +3,15 @@ import React from 'react';
 interface TurntableProps {
   isplay: boolean;
   keyHint: string;
+  deckIdx?: 1 | 2;
 }
 
-const Turntable: React.FC<TurntableProps> = ({ isplay, keyHint }) => {
+const Turntable: React.FC<TurntableProps> = ({ isplay, keyHint, deckIdx }) => {
   return (
-    <div className={`turntable ${isplay ? 'turntable--playing' : ''}`} aria-label="Turntable">
+    <div
+      className={`turntable ${deckIdx === 1 ? 'turntable--deck1' : ''} ${isplay ? 'turntable--playing' : ''}`}
+      aria-label="Turntable"
+    >
       <div className="turntable__ring" />
       <div className="turntable__disc" />
       <div className="turntable__center" />

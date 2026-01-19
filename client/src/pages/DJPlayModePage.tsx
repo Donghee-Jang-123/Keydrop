@@ -9,6 +9,8 @@ export default function HomePage() {
   useInputManager(audioEngine);
 
   const filePickerDeck = useDJStore((s) => s.filePickerDeck);
+  const deck1Title = useDJStore((s) => s.deck1.trackTitle);
+  const deck2Title = useDJStore((s) => s.deck2.trackTitle);
   const { clearLocalFileRequest, setTrackTitle, setPlayState } = useDJStore.getState().actions;
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -20,17 +22,21 @@ export default function HomePage() {
     fileInputRef.current?.click();
   }, [filePickerDeck]);
 
+  // 곡이 등록되지 않은 상태인지 확인
+  const isDeck1Empty = deck1Title === '';
+  const isDeck2Empty = deck2Title === '';
+
   const deck1Meta = {
-    title: 'Lose Control',
-    artist: 'alice.km, Molly Mouse',
+    title: isDeck1Empty ? '곡이 등록되지 않았습니다' : deck1Title,
+    artist: isDeck1Empty ? '' : 'alice.km, Molly Mouse',
     bpm: 128,
     time: '1:28',
     duration: '2:40 / 5:19',
   };
 
   const deck2Meta = {
-    title: 'Hypersilent',
-    artist: 'Mochakk',
+    title: isDeck2Empty ? '곡이 등록되지 않았습니다' : deck2Title,
+    artist: isDeck2Empty ? '' : 'Mochakk',
     bpm: 130,
     time: '0:42',
     duration: '2:40 / 5:19',

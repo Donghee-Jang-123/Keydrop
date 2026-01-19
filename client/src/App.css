@@ -1,10 +1,10 @@
 /* KeyDROP UI (waveform/키보드/라이브러리: placeholder만) */
 
 :root {
-  --bg0: #0b0c10;
-  --bg1: #12141a;
-  --panel: rgba(24, 26, 33, 0.88);
-  --panel2: rgba(18, 20, 26, 0.92);
+  --bg0: rgb(53, 53, 53);
+  --bg1: rgb(53, 53, 53);
+  --panel: rgb(53, 53, 53);
+  --panel2: rgb(53, 53, 53);
   --line: rgba(255, 255, 255, 0.08);
   --cyan: #68f6ff;
   --pink: #cf63ff;
@@ -17,7 +17,7 @@
 
 .kd {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f1012 0%, #0b0c0e 100%);
+  background: rgb(53, 53, 53);
   color: var(--text);
   padding: 14px 14px 22px;
 }
@@ -145,10 +145,10 @@
 .deckPanel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 2px;
   box-shadow: var(--shadow);
   overflow: hidden;
-  min-height: 500px;
+  min-height: 435px;
 }
 
 .deckPanel__header {
@@ -348,10 +348,24 @@
   box-shadow: 0 0 22px rgba(104, 246, 255, 0.18), 0 0 0 1px rgba(104, 246, 255, 0.12) inset;
 }
 
+.pad.pad--cue {
+  padding-top: 8px !important;    /* 기존 20px에서 8px로 축소 */
+  padding-bottom: 8px !important; /* 기존 20px에서 8px로 축소 */
+}
+
+/* 버튼이 작아졌으므로 내부 글자 크기도 미세하게 조절 */
+.pad.pad--cue .pad__label {
+  font-size: 13px;
+}
+
+.pad.pad--cue .pad__key {
+  font-size: 11px;
+}
+
 /* Turntable */
 .turntable {
-  width: 240px;
-  height: 240px;
+  width: 220px;
+  height: 220px;
   border-radius: 999px;
   position: relative;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0.9) 100%);
@@ -397,6 +411,11 @@
   font-size: 22px;
   box-shadow: 0 0 40px rgba(104, 246, 255, 0.12);
 }
+.turntable--deck1 .turntable__btnIcon {
+  background: radial-gradient(circle, rgba(98, 255, 120, 0.30) 0%, rgba(0, 0, 0, 0.55) 70%);
+  border: 1px solid rgba(98, 255, 120, 0.55);
+  box-shadow: 0 0 40px rgba(98, 255, 120, 0.18);
+}
 .turntable__btnKey {
   position: absolute;  
   bottom: 20px;       
@@ -419,9 +438,9 @@
 .mixerPanel {
   background: var(--panel2);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 2px;
   box-shadow: var(--shadow);
-  padding: 12px;
+  padding: 6px;
 }
 
 .mixerPanel__bpm {
@@ -476,6 +495,37 @@
   color: rgba(255, 255, 255, 0.7);
   letter-spacing: 0.12em;
 }
+.knob {
+  position: relative;
+  width: 54px;
+  height: 54px;
+}
+.knob-ring {
+  /* 270도만 사용하는 progress ring (시작각: -135도) */
+  --sweep: 0deg;
+  --ringColor: rgba(104, 246, 255, 0.95);
+  position: absolute;
+  inset: -4px; /* 다이얼 바깥쪽으로 살짝 */
+  border-radius: 999px;
+  background: conic-gradient(
+    from -135deg,
+    var(--ringColor) 0deg var(--sweep),
+    rgba(255, 255, 255, 0.12) var(--sweep) 270deg,
+    transparent 270deg 360deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 5px),
+    #000 calc(100% - 5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 5px),
+    #000 calc(100% - 5px)
+  );
+  filter: drop-shadow(0 0 7px rgba(104, 246, 255, 0.18));
+  pointer-events: none;
+}
 .knob-dial {
   width: 54px !important;
   height: 54px !important;
@@ -483,48 +533,113 @@
   background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0.85) 70%);
   border: 2px solid rgba(255, 255, 255, 0.14) !important;
   box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.08), 0 14px 30px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+.knob-pointer {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transition: transform 0.05s linear;
+}
+.knob-dot {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
 }
 
 .mixerPanel__faders {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 50px;
   padding: 0 6px;
 }
 .mixerPanel__vfaderTrack {
+  width: 44px;           /* 트랙 너비를 44px로 고정 */
+  margin: 0 auto;        /* 부모 컨테이너 중앙에 배치 */
   height: 240px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: transparent;
+  border: 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible;     /* 중요: 바가 트랙 밖으로 튀어나올 수 있도록 설정 */
+  padding: 15px 0;
+}
+
+.mixerPanel__vfaderMeter {
+  position: absolute;
+  left: 50%;
+  top: 15px;
+  bottom: 15px;
+  width: 10px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  z-index: 1;
+}
+
+.mixerPanel__vfaderFill {
+  position: absolute;
+  left: 50%;
+  bottom: 15px; /* padding과 맞춤 */
+  width: 10px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  opacity: 0.95;
+  z-index: 2;
+}
+.mixerPanel__vfaderFill--left {
+  background: linear-gradient(
+    to top,
+    rgb(12, 150, 30),
+    rgb(113, 255, 100)
+  );
+  box-shadow: 0 0 18px rgba(98, 255, 120, 0.22);
+}
+.mixerPanel__vfaderFill--right {
+  background: linear-gradient(
+    to top,
+    rgb(68, 157, 163),
+    rgba(104, 246, 255)
+  );
+  box-shadow: 0 0 18px rgba(104, 246, 255, 0.22);
 }
 
 .mixerPanel__vfaderTrack::before {
   /* 눈금(틱) */
   content: '';
   position: absolute;
-  inset: 10px;
+  inset: 0px;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.22) 0px,
-    rgba(255, 255, 255, 0.22) 1px,
-    transparent 1px,
-    transparent 14px
+    rgba(255, 255, 255, 0.55) 0px,
+    rgba(255, 255, 255, 0.55) 2px,
+    transparent 2px,
+    transparent 20px
   );
-  opacity: 0.25;
+  opacity: 0.8;
   pointer-events: none;
+  z-index: 0;
 }
+
 .mixerPanel__vfaderThumb {
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
-  width: 56px;
-  height: 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55);
+  transform: translate(-50%, -50%); 
+  width: 60px;           /* 바 너비를 74px로 늘려 트랙(44px)을 초과하게 함 */
+  height: 12px;          /* 두께도 살짝 조절 (선택 사항) */
+  border-radius: 1px;    /* 조금 더 각진 DJ 장비 느낌으로 변경 */
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 3;
 }
+
 .mixerPanel__vfaderThumb--left {
   box-shadow: 0 0 0 1px rgba(104, 246, 255, 0.25) inset, 0 10px 22px rgba(0, 0, 0, 0.55);
 }
@@ -538,25 +653,48 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .mixerPanel__crossTrack {
-  height: 24px;
+  height: 40px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(104, 246, 255, 0.35), rgba(255, 255, 255, 0.08), rgba(207, 99, 255, 0.35));
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: transparent; /* 그라데이션은 별도 레이어(.mixerPanel__crossGradient)에 고정 표시 */
+  border: 0; /* 경계선 제거 */
   position: relative;
+  overflow: visible;
+}
+
+.mixerPanel__crossGradient {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 50%;
+  height: 13px;
+  transform: translateY(-50%);
+  border-radius: px;
+  /* 기존 그라데이션 유지 (항상 전체 길이로 표시) */
+  background: linear-gradient(
+    90deg,
+    rgba(13, 236, 88),
+    rgba(106, 233, 148),
+    rgba(255, 255, 255, 0.849),
+    rgba(127, 219, 231),
+    rgba(16, 172, 219)
+  );
+  opacity: 1;
+  z-index: 2;
 }
 
 .mixerPanel__crossTrack::before {
   content: '';
   position: absolute;
-  inset: 6px 10px;
+  inset: 0px;
   background: repeating-linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.22) 0px,
-    rgba(255, 255, 255, 0.22) 1px,
-    transparent 1px,
-    transparent 14px
+    rgba(255, 255, 255, 0.55) 0px,
+    rgba(255, 255, 255, 0.55) 2px,
+    transparent 2px,
+    transparent 19px
   );
-  opacity: 0.25;
+  opacity: 0.80;
+  z-index: 1;
 }
 
 .kdLibraryPlaceholder {
@@ -583,11 +721,12 @@
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 18px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  width: 10px;
+  height: 45px;
+  border-radius: 1px;
+  background: rgb(255, 255, 255);
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
+  z-index: 3;
 }
 
 /* Responsive */

@@ -39,8 +39,8 @@ interface DJState {
 
 export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
-  deck1: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Lose Control' },
-  deck2: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Hypersilent' },
+  deck1: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: '' },
+  deck2: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: '' },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
   fxTargetDeck: 1,

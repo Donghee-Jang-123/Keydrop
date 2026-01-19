@@ -53,14 +53,6 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
           <div className="deckPanel__bpmLabel">BPM</div>
           <div className="deckPanel__bpmValue">{meta.bpm}</div>
         </div>
-        <button
-          type="button"
-          className="deckPanel__loadBtn"
-          onClick={() => requestLocalFile(deckIdx)}
-          title={deckIdx === 1 ? 'ShiftLeft' : 'ShiftRight'}
-        >
-          LOAD <span className="deckPanel__loadKey">{deckIdx === 1 ? 'ShiftLeft' : 'ShiftRight'}</span>
-        </button>
       </header>
 
       <div className="deckPanel__subHeader">
@@ -83,18 +75,19 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
                   keyHint={p.keyHint}
                   variant={p.variant}
                   active={p.fx ? deck.fx === p.fx : false}
+                  className={p.label.includes('cue') ? 'pad--cue' : ''}
                 />
               ))}
             </div>
             <div className="deckPanel__turntable">
-              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable deckIdx={deckIdx} isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
           </>
         ) : (
           /* Deck2(오른쪽 덱)은 "턴테이블(왼쪽) - 패드(오른쪽)" 배치 */
           <>
             <div className="deckPanel__turntable">
-              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable deckIdx={deckIdx} isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
             <div className="deckPanel__pads deckPanel__pads--grid">
               {pads.map((p) => (
@@ -104,6 +97,7 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
                   keyHint={p.keyHint}
                   variant={p.variant}
                   active={p.fx ? deck.fx === p.fx : false}
+                  className={p.label.includes('cue') ? 'pad--cue' : ''}
                 />
               ))}
             </div>

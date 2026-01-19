@@ -16,35 +16,29 @@ const Knob: React.FC<KnobProps> = ({ deckIdx, knobType, label }) => {
 
   // 0.0 ~ 1.0 값을 각도(-135도 ~ +135도)로 변환
   const rotation = value * 270 - 135;
+  const sweep = value * 270;
 
   return (
     <div className="knob-container" style={{ textAlign: 'center' }}>
       <div className="knob-label">{label}</div>
-      {/* 실제 돌아가는 다이얼 이미지 또는 CSS */}
-      <div 
-        className="knob-dial"
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          border: '3px solid #555',
-          position: 'relative',
-          // CSS transform으로 회전 적용
-          transform: `rotate(${rotation}deg)`,
-          transition: 'transform 0.05s linear' // 부드러운 움직임 (옵션)
-        }}
-      >
-        {/* 노브의 현재 위치를 가리키는 점 */}
-        <div style={{
-          position: 'absolute',
-          top: '5px',
-          left: '50%',
-          width: '6px',
-          height: '6px',
-          backgroundColor: 'cyan',
-          borderRadius: '50%',
-          transform: 'translateX(-50%)'
-        }} />
+
+      {/* 사진처럼: (1) 값만큼 채워지는 링 + (2) 고정 다이얼 + (3) 회전 포인터 */}
+      <div className="knob">
+        <div
+          className="knob-ring"
+          style={
+            {
+              ['--sweep' as any]: `${sweep}deg`,
+              ['--ringColor' as any]: deckIdx === 1 ? 'rgba(98, 255, 120, 0.95)' : 'rgba(104, 246, 255, 0.95)',
+            } as React.CSSProperties
+          }
+          aria-hidden="true"
+        />
+        <div className="knob-dial">
+          <div className="knob-pointer" style={{ transform: `rotate(${rotation}deg)` }}>
+            <div className="knob-dot" aria-hidden="true" />
+          </div>
+        </div>
       </div>
     </div>
   );

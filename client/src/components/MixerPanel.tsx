@@ -8,9 +8,15 @@ const MixerPanel: React.FC = () => {
   const deck1 = useDJStore((s) => s.deck1);
   const deck2 = useDJStore((s) => s.deck2);
 
-  // fader: 0~1 (상단이 1)
-  const faderTop1 = `${(1 - deck1.fader) * 100}%`;
-  const faderTop2 = `${(1 - deck2.fader) * 100}%`;
+  const VFADER_HEIGHT = 240;
+  const VFADER_PAD = 15; 
+  const VFADER_USABLE = VFADER_HEIGHT - VFADER_PAD * 2; 
+
+  // fader: 0~1 (상단이 1), 패딩(15px)을 고려한 계산
+  const faderTop1 = `calc(${VFADER_PAD}px + ${(1 - deck1.fader) * VFADER_USABLE}px + 35px)`;
+  const faderTop2 = `calc(${VFADER_PAD}px + ${(1 - deck2.fader) * VFADER_USABLE}px + 35px)`;
+  const faderFillH1 = `${deck1.fader * VFADER_USABLE}px`;
+  const faderFillH2 = `${deck2.fader * VFADER_USABLE}px`;
 
   return (
     <section className="mixerPanel" aria-label="Mixer">
@@ -31,11 +37,23 @@ const MixerPanel: React.FC = () => {
         <div className="mixerPanel__faders">
           <div className="mixerPanel__vfader">
             <div className="mixerPanel__vfaderTrack">
+              <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
+              <div
+                className="mixerPanel__vfaderFill mixerPanel__vfaderFill--left"
+                style={{ height: faderFillH1 }}
+                aria-hidden="true"
+              />
               <div className="mixerPanel__vfaderThumb mixerPanel__vfaderThumb--left" style={{ top: faderTop1 }} />
             </div>
           </div>
           <div className="mixerPanel__vfader">
             <div className="mixerPanel__vfaderTrack">
+              <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
+              <div
+                className="mixerPanel__vfaderFill mixerPanel__vfaderFill--right"
+                style={{ height: faderFillH2 }}
+                aria-hidden="true"
+              />
               <div className="mixerPanel__vfaderThumb mixerPanel__vfaderThumb--right" style={{ top: faderTop2 }} />
             </div>
           </div>
@@ -50,6 +68,7 @@ const MixerPanel: React.FC = () => {
 
       <div className="mixerPanel__cross">
         <div className="mixerPanel__crossTrack">
+          <div className="mixerPanel__crossGradient" aria-hidden="true" />
           <div className="mixerPanel__crossThumb" style={{ left: `${((crossFader + 1) / 2) * 100}%` }} />
         </div>
       </div>
