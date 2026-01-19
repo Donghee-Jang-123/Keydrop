@@ -3,6 +3,7 @@ import { useDJStore } from '../store/useDJStore';
 import Knob from './Knob';
 import Turntable from './Turntable';
 import EffectPad from './EffectPad';
+import type { FxType } from '../store/useDJStore';
 
 interface DeckMeta {
   title: string;
@@ -21,32 +22,18 @@ interface DeckPanelProps {
 const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
   const deck = useDJStore((s) => (deckIdx === 1 ? s.deck1 : s.deck2));
 
-  // - 왼쪽 덱: 좌/우에 세로 3개 패드, 가운데 턴테이블
-  // - 오른쪽 덱: 왼쪽에 미니 파형(placeholder) 세로막대 느낌, 오른쪽에 2x3 패드
-  const leftPads =
-    side === 'left'
-      ? [
-          { label: meta.time, variant: 'red' as const },
-          { label: 'slicer', keyHint: 'num4', variant: 'gray' as const, fx: 'SLICER' as const },
-          { label: 'crush', keyHint: 'num1', variant: 'gray' as const, fx: 'CRUSH' as const },
-        ]
-      : [];
+  // 요청사항: Deck1/Deck2 모두 3x2 버튼(6개)로 통일
+  const cue1Key = deckIdx === 1 ? '1' : '8';
+  const cue2Key = deckIdx === 1 ? '2' : '9';
 
-  const rightPads =
-    side === 'left'
-      ? [
-          { label: 'cue 2', keyHint: deckIdx === 1 ? '2' : '9', variant: 'gray' as const },
-          { label: 'kick', keyHint: 'num5', variant: 'gray' as const, fx: 'KICK' as const },
-          { label: 'flanger', keyHint: 'num2', variant: 'gray' as const, fx: 'FLANGER' as const },
-        ]
-      : [
-          { label: 'cue 1', keyHint: '8', variant: 'gray' as const },
-          { label: 'cue 2', keyHint: '9', variant: 'gray' as const },
-          { label: 'slicer', keyHint: 'num4', variant: 'gray' as const, fx: 'SLICER' as const },
-          { label: 'kick', keyHint: 'num5', variant: 'gray' as const, fx: 'KICK' as const },
-          { label: 'crush', keyHint: 'num1', variant: 'gray' as const, fx: 'CRUSH' as const },
-          { label: 'flanger', keyHint: 'num2', variant: 'gray' as const, fx: 'FLANGER' as const },
-        ];
+  const pads: Array<{ label: string; keyHint: string; variant: 'gray' | 'red'; fx?: FxType }> = [
+    { label: 'cue 1', keyHint: cue1Key, variant: 'gray' },
+    { label: 'cue 2', keyHint: cue2Key, variant: 'gray' },
+    { label: 'slicer', keyHint: 'num4', variant: 'gray', fx: 'SLICER' },
+    { label: 'kick', keyHint: 'num5', variant: 'gray', fx: 'KICK' },
+    { label: 'crush', keyHint: 'num1', variant: 'gray', fx: 'CRUSH' },
+    { label: 'flanger', keyHint: 'num2', variant: 'gray', fx: 'FLANGER' },
+  ];
 
   return (
     <section className={`deckPanel deckPanel--${side}`}>
@@ -76,13 +63,13 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
       <div className="deckPanel__wavePlaceholder" aria-hidden="true" />
 
       <div className="deckPanel__body">
-        <div className="deckPanel__col deckPanel__col--left" aria-hidden={side === 'right' ? 'true' : 'false'}>
-          {side === 'right' ? <div className="deckPanel__meterPlaceholder" aria-hidden="true" /> : null}
-          {side === 'left' ? (
-            <div className="deckPanel__pads deckPanel__pads--col">
-              {leftPads.map((p) => (
+        {/* Deck1(왼쪽 덱)은 "패드(왼쪽) - 턴테이블(오른쪽)" 배치 */}
+        {side === 'left' ? (
+          <>
+            <div className="deckPanel__pads deckPanel__pads--grid">
+              {pads.map((p) => (
                 <EffectPad
-                  key={`${p.label}-${p.keyHint ?? ''}`}
+                  key={`${p.label}-${p.keyHint}`}
                   label={p.label}
                   keyHint={p.keyHint}
                   variant={p.variant}
@@ -90,26 +77,29 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
                 />
               ))}
             </div>
-          ) : null}
-        </div>
-
-        <div className="deckPanel__turntable">
-          <Turntable isPlaying={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
-        </div>
-
-        <div className="deckPanel__col deckPanel__col--right">
-          <div className={`deckPanel__pads ${side === 'left' ? 'deckPanel__pads--col' : 'deckPanel__pads--grid'}`}>
-            {rightPads.map((p) => (
-              <EffectPad
-                key={`${p.label}-${p.keyHint ?? ''}`}
-                label={p.label}
-                keyHint={p.keyHint}
-                variant={p.variant}
-                active={p.fx ? deck.fx === p.fx : false}
-              />
-            ))}
-          </div>
-        </div>
+            <div className="deckPanel__turntable">
+              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'V' : 'N'} />
+            </div>
+          </>
+        ) : (
+          /* Deck2(오른쪽 덱)은 "턴테이블(왼쪽) - 패드(오른쪽)" 배치 */
+          <>
+            <div className="deckPanel__turntable">
+              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'V' : 'N'} />
+            </div>
+            <div className="deckPanel__pads deckPanel__pads--grid">
+              {pads.map((p) => (
+                <EffectPad
+                  key={`${p.label}-${p.keyHint}`}
+                  label={p.label}
+                  keyHint={p.keyHint}
+                  variant={p.variant}
+                  active={p.fx ? deck.fx === p.fx : false}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* 노브는 스크린샷처럼 믹서 주변에 두는 게 자연스럽지만, 현재는 덱에도 최소 표시 */}

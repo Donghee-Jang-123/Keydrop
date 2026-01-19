@@ -17,7 +17,6 @@
 
 .kd {
   min-height: 100vh;
-  /* 2번 스크린샷처럼 더 '플랫'한 다크 톤 */
   background: linear-gradient(180deg, #0f1012 0%, #0b0c0e 100%);
   color: var(--text);
   padding: 14px 14px 22px;
@@ -135,10 +134,10 @@
 /* Main 3-column */
 .kdMain {
   display: grid;
-  grid-template-columns: 1fr 360px 1fr;
+  grid-template-columns: 1fr 400px 1fr;
   gap: 14px;
   align-items: start;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -149,6 +148,7 @@
   border-radius: 14px;
   box-shadow: var(--shadow);
   overflow: hidden;
+  min-height: 500px;
 }
 
 .deckPanel__header {
@@ -210,7 +210,7 @@
 }
 
 .deckPanel__wavePlaceholder {
-  height: 72px;
+  height: 50px;
   margin: 0 12px 6px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.35);
@@ -227,14 +227,18 @@
 
 /* 2번 UI처럼: 패드 영역이 턴테이블에 가려지지 않도록 컬럼을 명확히 분리 */
 .deckPanel--left .deckPanel__body {
-  grid-template-columns: 180px 260px 180px;
+  grid-template-columns: 1fr 250px;
 }
 .deckPanel--right .deckPanel__body {
-  grid-template-columns: 46px 260px 1fr;
+  grid-template-columns: 250px 1fr;
 }
 
 .deckPanel--right .deckPanel__turntable {
   justify-content: flex-start; /* 턴테이블을 왼쪽으로 붙여 패드 영역과 겹침 방지 */
+}
+
+.deckPanel--left .deckPanel__turntable {
+  justify-content: flex-end; /* 턴테이블을 오른쪽으로 붙임 */
 }
 
 .deckPanel__col {
@@ -253,10 +257,6 @@
 .deckPanel__pads {
   display: grid;
   gap: 10px;
-}
-
-.deckPanel__pads--col {
-  grid-template-columns: 1fr;
 }
 
 .deckPanel__pads--grid {
@@ -297,7 +297,7 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 20px 16px;
   color: rgba(255, 255, 255, 0.85);
   display: flex;
   justify-content: space-between;
@@ -352,7 +352,7 @@
 }
 .turntable__center {
   position: absolute;
-  inset: 110px;
+  inset: 120px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -360,8 +360,9 @@
 .turntable__btn {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .turntable__btnIcon {
   width: 74px;
@@ -376,7 +377,8 @@
   box-shadow: 0 0 40px rgba(104, 246, 255, 0.12);
 }
 .turntable__btnKey {
-  margin-top: 6px;
+  position: absolute;  
+  bottom: 20px;       
   font-size: 12px;
   color: rgba(255, 255, 255, 0.35);
 }
@@ -402,42 +404,28 @@
 }
 
 .mixerPanel__bpm {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  align-items: center;
-  gap: 8px 10px;
-  padding: 6px 8px 10px;
+  position: relative;    
+  display: flex;
+  justify-content: center;
+  align-items: baseline;    
+  gap: 6px;
+  padding: 10px 0; 
 }
-.mixerPanel__bpmSmall {
-  font-size: 12px;
-  color: var(--muted2);
-}
+
+
 .mixerPanel__bpmBig {
-  grid-column: 1 / 2;
-  font-size: 44px;
+  font-size: 48px;         /* 숫자를 크게 설정 */
   font-weight: 900;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
+  margin: 0;
+  line-height: 1;         
 }
+
 .mixerPanel__bpmUnit {
-  font-size: 12px;
-  color: var(--muted2);
-  align-self: end;
-  margin-bottom: 6px;
-}
-.mixerPanel__matchBtn {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3;
-  align-self: center;
-  justify-self: end;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
-  padding: 8px 10px;
+  font-size: 14px;         /* 글자를 작게 설정 */
   font-weight: 700;
-  font-size: 12px;
+  color: var(--muted2);    /* 약간 흐릿한 색상 적용 */
+  text-transform: uppercase;
 }
 
 .mixerPanel__knobCols {
@@ -598,7 +586,7 @@
     grid-template-columns: 1fr 1fr;
   }
   .turntable {
-    width: 240px;
-    height: 240px;
+    width: 200px;
+    height: 200px;
   }
 }

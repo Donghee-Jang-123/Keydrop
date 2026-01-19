@@ -15,12 +15,10 @@ const MixerPanel: React.FC = () => {
   return (
     <section className="mixerPanel" aria-label="Mixer">
       <div className="mixerPanel__bpm">
-        <div className="mixerPanel__bpmSmall">BPM</div>
-        <div className="mixerPanel__bpmBig">{Math.round(bpm)}</div>
-        <div className="mixerPanel__bpmUnit">BPM</div>
-        <button type="button" className="mixerPanel__matchBtn">
-          Match
-        </button>
+        <span className="mixerPanel__bpmBig">{Math.round(bpm)}</span>
+        
+        <span className="mixerPanel__bpmUnit">BPM</span>
+
       </div>
 
       <div className="mixerPanel__knobCols">
