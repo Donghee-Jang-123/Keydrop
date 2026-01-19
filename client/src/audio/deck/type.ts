@@ -15,5 +15,6 @@ export type DeckState = {
   isPlaying: boolean;
   durationSec: number;
   positionSec: number;
+  playbackRate: number;
   cues: Record<number, number | undefined>;
 };

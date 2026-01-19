@@ -4,9 +4,19 @@ import { Deck } from '../audio/deck/Deck';
 import { Mixer } from '../audio/mixer/Mixer';
 import { FXRack, type FXType as FXTypeLower } from '../audio/fx/FXRack';
 import { useDJStore } from '../store/useDJStore';
+import { BeatAnalyzer } from '../audio/beat/BeatAnalyzer';
+import type { BeatAnalysis } from '../audio/beat/type';
+import { SyncService } from '../audio/beat/SyncService';
 
 export type ControlTarget = 'mid' | 'bass' | 'filter' | 'fader' | 'crossFader' | 'bpm';
 export type FxType = 'CRUSH' | 'FLANGER' | 'SLICER' | 'KICK';
+
+export type PeekDeckState = {
+  isPlaying: boolean;
+  durationSec: number;
+  positionSec: number;
+  playbackRate: number;
+};
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const clamp11 = (v: number) => Math.max(-1, Math.min(1, v));
@@ -69,6 +79,11 @@ class KeydropAudioEngineAdapter {
   private cross = 0;
   private activeFx: Record<1 | 2, FxType | null> = { 1: null, 2: null };
 
+  private readonly beatAnalyzer = new BeatAnalyzer();
+  private readonly syncService = new SyncService();
+
+  private beat: Record<1 | 2, BeatAnalysis | null> = { 1: null, 2: null };
+
   private async ensureGraph(): Promise<void> {
     if (this.initPromise) return this.initPromise;
 
@@ -115,13 +130,22 @@ class KeydropAudioEngineAdapter {
     return d;
   }
 
-  // UI 폴링용: 그래프가 준비되어 있고 버퍼가 로드된 경우에만 상태를 반환
-  public peekDeckState(deck: 1 | 2): { isPlaying: boolean; durationSec: number; positionSec: number } | null {
+  public peekDeckState(deck: 1 | 2): PeekDeckState | null {
     const d = deck === 1 ? this.deck1 : this.deck2;
     if (!d) return null;
     if (!d.getBuffer()) return null;
+
     const s = d.getState();
-    return { isPlaying: s.isPlaying, durationSec: s.durationSec, positionSec: s.positionSec };
+    return {
+      isPlaying: s.isPlaying,
+      durationSec: s.durationSec,
+      positionSec: s.positionSec,
+      playbackRate: s.playbackRate ?? 1.0,
+    };
+  }
+
+  public getAnalyzedBpm(deck: 1 | 2): number | null {
+    return this.beat[deck]?.bpm ?? null;
   }
 
   private async decodeFile(file: File): Promise<AudioBuffer> {
@@ -180,10 +204,19 @@ class KeydropAudioEngineAdapter {
           useDJStore.getState().actions.setPlayState(1, isPlaying);
         });
       },
-      loadFile: (file: File) => {
+      loadFile: (file: File, metaBpm?: number) => {
         void this.ensureGraph().then(async () => {
           const buf = await this.decodeFile(file);
           this.getDeck(1).load(buf);
+
+          const analysis = this.beatAnalyzer.analyze(buf);
+
+          if (metaBpm && metaBpm > 0) {
+            analysis.bpm = metaBpm;
+            analysis.confidence = Math.max(analysis.confidence, 0.99);
+          }
+
+          this.beat[1] = analysis;
 
           const peaks = buildPeaks(buf, 1400);
           useDJStore.getState().actions.setWaveform(1, peaks);
@@ -219,6 +252,11 @@ class KeydropAudioEngineAdapter {
         stopScratchHold: () => {
           void this.ensureGraph().then(() => this.getDeck(1).stopScratchHold());
         },
+        setPlaybackRate: (rate: number) => {
+          void this.ensureGraph().then(()=> {
+            this.getDeck(1).setPlaybackRate(rate);
+          })
+        }
     },
     2: {
       adjustParam: (target: ControlTarget, delta: number) => {
@@ -249,10 +287,18 @@ class KeydropAudioEngineAdapter {
           useDJStore.getState().actions.setPlayState(2, isPlaying);
         });
       },
-      loadFile: (file: File) => {
+      loadFile: (file: File, metaBpm?: number) => {
         void this.ensureGraph().then(async () => {
           const buf = await this.decodeFile(file);
           this.getDeck(2).load(buf);
+
+          const analysis = this.beatAnalyzer.analyze(buf);
+
+          if (metaBpm && metaBpm > 0) {
+            analysis.bpm = metaBpm;
+            analysis.confidence = Math.max(analysis.confidence, 0.99);
+          }
+          this.beat[2] = analysis;
 
           const peaks = buildPeaks(buf, 1400);
           useDJStore.getState().actions.setWaveform(2, peaks);
@@ -286,23 +332,71 @@ class KeydropAudioEngineAdapter {
         stopScratchHold: () => {
           void this.ensureGraph().then(() => this.getDeck(2).stopScratchHold());
         },
+        setPlaybackRate: (rate: number) => {
+          void this.ensureGraph().then(()=> {
+            this.getDeck(2).setPlaybackRate(rate);
+          })
+        }
     },
   } as const;
 
-  public readonly mixerApi = {
-    adjustCrossFader: (delta: number) => {
-      void this.ensureGraph().then(() => {
-        this.cross = clamp11(this.cross + delta);
-        this.mixer?.setCrossfader(this.cross);
-      });
-    },
-    sync: () => {
-      // Beat 분석/SyncService는 아직 UI에서 연결하지 않아서 일단 no-op.
-      // 필요하면 master/slave 선택 + BeatAnalysis 연결해서 SyncService로 교체 가능.
-      void this.ensureGraph();
-      console.log('[Mixer] sync requested (not wired yet)');
-    },
-  } as const;
+    public readonly mixerApi = {
+      adjustCrossFader: (delta: number) => {
+        void this.ensureGraph().then(() => {
+          this.cross = clamp11(this.cross + delta);
+          this.mixer?.setCrossfader(this.cross);
+        });
+      },
+
+      sync: () => {
+        void this.ensureGraph().then(() => {
+          const d1 = this.getDeck(1);
+          const d2 = this.getDeck(2);
+
+          const s1 = d1.getState();
+          const s2 = d2.getState();
+
+          // 둘 다 버퍼 없으면 스킵
+          if (!d1.getBuffer() || !d2.getBuffer()) {
+            console.log("[SYNC] skip: missing buffer");
+            return;
+          }
+
+          let master: 1 | 2 | null = null;
+          let slave: 1 | 2 | null = null;
+
+          if (s1.isPlaying && !s2.isPlaying) {
+            master = 1; slave = 2;
+          } else if (!s1.isPlaying && s2.isPlaying) {
+            master = 2; slave = 1;
+          } else if (s1.isPlaying && s2.isPlaying) {
+            master = 1; slave = 2;
+          } else {
+            console.log("[SYNC] skip: both stopped");
+            return;
+          }
+
+          const mDeck = master === 1 ? d1 : d2;
+          const sDeck = slave === 1 ? d1 : d2;
+
+          // 분석이 없으면 즉석에서 분석(보험)
+          if (!this.beat[master]) this.beat[master] = this.beatAnalyzer.analyze(mDeck.getBuffer()!);
+          if (!this.beat[slave]) this.beat[slave] = this.beatAnalyzer.analyze(sDeck.getBuffer()!);
+
+          const mA = this.beat[master]!;
+          const sA = this.beat[slave]!;
+
+          this.syncService.syncSlaveToMaster(mDeck, sDeck, mA, sA);
+
+          console.log(`[SYNC] master=Deck${master} slave=Deck${slave}`, {
+            masterBpm: mA.bpm,
+            slaveBpm: sA.bpm,
+            mConf: mA.confidence,
+            sConf: sA.confidence,
+          });
+        });
+      },
+    } as const;
 }
 
 const adapter = new KeydropAudioEngineAdapter();
@@ -312,4 +406,5 @@ export const audioEngine = {
   decks: adapter.decks,
   mixer: adapter.mixerApi,
   peekDeckState: (deckIdx: 1 | 2) => adapter.peekDeckState(deckIdx),
+  getAnalyzedBpm: (deckIdx: 1 | 2) => adapter.getAnalyzedBpm(deckIdx),
 };

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useInputManager } from '../hooks/useInputManager';
+import { useEffect, useRef, useState } from 'react';
+import { useKeyManager } from '../hooks/useKeyManager';
 import { audioEngine } from '../services/audioEngine';
 import { useDJStore } from '../store/useDJStore';
 import { fetchMusicBlobByUrl } from '../api/musicApi';
@@ -17,9 +17,8 @@ function fmtTime(sec: number | undefined) {
 
 export default function DJPlayModePage() {
   console.log('[PAGE] DJPlayModePage render');
-  useInputManager(audioEngine);
+  useKeyManager(audioEngine);
 
-  const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);
   const pendingDbLoad = useDJStore((s) => s.pendingDbLoad);
   const filePickerDeck = useDJStore((s) => s.filePickerDeck);
 
@@ -39,6 +38,10 @@ export default function DJPlayModePage() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingDeckRef = useRef<1 | 2 | null>(null);
+
+  const cross = useDJStore((s) => s.crossFader);
+
+  const [masterBpm, setMasterBpm] = useState(0);
 
   useEffect(() => {
     if (!filePickerDeck) return;
@@ -62,7 +65,7 @@ export default function DJPlayModePage() {
 
         const name = `${track.title ?? 'track'}.mp3`;
         const file = new File([blob], name, { type: blob.type || 'audio/mpeg' });
-        audioEngine.decks[deckIdx].loadFile(file);
+        audioEngine.decks[deckIdx].loadFile(file, track.bpm ?? 0);
 
         setDeckMetaFromDb(deckIdx, {
           title: track.title ?? 'Unknown',
@@ -83,28 +86,47 @@ export default function DJPlayModePage() {
     };
   }, [pendingDbLoad, setPlayState, setDeckMetaFromDb, setTrackTitle, clearDbLoadRequest]);
 
-  // 재생 중 positionSec/durationSec를 주기적으로 store에 반영 (playhead + 시간 표시용)
   useEffect(() => {
     const tick = () => {
       const s1 = audioEngine.peekDeckState(1);
+      const s2 = audioEngine.peekDeckState(2);
+
       if (s1) {
         setPositionSec(1, s1.positionSec);
         setDurationSec(1, s1.durationSec);
-        setPlayState(1, s1.isPlaying);
       }
 
-      const s2 = audioEngine.peekDeckState(2);
       if (s2) {
         setPositionSec(2, s2.positionSec);
         setDurationSec(2, s2.durationSec);
-        setPlayState(2, s2.isPlaying);
       }
+
+      if (!s1 && !s2) return;
+
+      const a1 = audioEngine.getAnalyzedBpm(1);
+      const a2 = audioEngine.getAnalyzedBpm(2);
+
+      let bpm = 0;
+
+      if (s1?.isPlaying && !s2?.isPlaying && a1) {
+        bpm = a1 * s1.playbackRate;
+      } else if (!s1?.isPlaying && s2?.isPlaying && a2) {
+        bpm = a2 * s2.playbackRate;
+      } else if (s1?.isPlaying && s2?.isPlaying) {
+        const useDeck2 = cross >= 0;
+        if (useDeck2 && a2) bpm = a2 * s2.playbackRate;
+        if (!useDeck2 && a1) bpm = a1 * s1.playbackRate;
+      }
+
+      setMasterBpm((prev) =>
+        Math.abs(prev - bpm) > 0.1 ? bpm : prev
+      );
+      
     };
 
-    // 너무 잦은 렌더를 피하려고 100ms 폴링
-    const id = window.setInterval(tick, 100);
-    return () => window.clearInterval(id);
-  }, [setPositionSec, setDurationSec, setPlayState]);
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [cross]);
 
   const deck1Meta = {
     title: deck1.trackTitle,
@@ -153,7 +175,7 @@ export default function DJPlayModePage() {
 
       <main className="kdMain">
         <DeckPanel deckIdx={1} side="left" meta={deck1Meta} />
-        <MixerPanel />
+        <MixerPanel masterBpm={masterBpm}/>
         <DeckPanel deckIdx={2} side="right" meta={deck2Meta} />
       </main>
 
@@ -174,7 +196,7 @@ export default function DJPlayModePage() {
           try {
             setPlayState(deck, false);
             setTrackTitle(deck, file.name);
-            audioEngine.decks[deck].loadFile(file);
+            audioEngine.decks[deck].loadFile(file, 0);
           } catch (err) {
             console.error('[loadFile] failed', err);
           }

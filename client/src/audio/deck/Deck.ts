@@ -28,6 +28,8 @@ export class Deck {
   private scratchHoldBasePos = 0;
   private scratchHoldDir: 1 | -1 = 1;
 
+  private playbackRate = 1.0;
+
   constructor(ctx: AudioContext, id: DeckId) {
     this.ctx = ctx;
     this.id = id;
@@ -90,6 +92,7 @@ export class Deck {
     if (!this.buffer) throw new Error(`Deck${this.id}: no buffer loaded`);
 
     const src = this.ctx.createBufferSource();
+    src.playbackRate.value = this.playbackRate;
     src.buffer = this.buffer;
     src.connect(this.bassNode);
 
@@ -266,6 +269,27 @@ export class Deck {
     }
   }
 
+  public getPlaybackRate(): number {
+    return this.source?.playbackRate?.value ?? 1.0;
+  }
+
+  public setPlaybackRate(rate: number) {
+    const r = Math.max(0.5, Math.min(rate, 2.0)); // 범위는 취향
+    this.playbackRate = r;
+
+    if (this.source) this.source.playbackRate.value = r;
+  }
+
+  public rampPlaybackRate(targetRate: number, durationSec: number): void {
+    if (!this.source) return;
+    const now = this.ctx.currentTime;
+    const pr = this.source.playbackRate;
+    pr.cancelScheduledValues(now);
+    pr.setValueAtTime(pr.value, now);
+    pr.linearRampToValueAtTime(targetRate, now + Math.max(0.01, durationSec));
+    this.playbackRate = targetRate;
+  }
+
   // ------------------ EQ/Filter/Fader ------------------
   public setFader(value01: number): void {
     const v = Math.max(0, Math.min(value01, 1));
@@ -289,10 +313,12 @@ export class Deck {
   }
 
   public getState(): DeckState {
+    const pr = this.source?.playbackRate?.value ?? this.playbackRate ?? 1.0;
     return {
       isPlaying: this.isPlaying,
       durationSec: this.getDurationSec(),
       positionSec: this.getPositionSec(),
+      playbackRate: pr,
       cues: {
         1: this.cues.get(1),
         2: this.cues.get(2),

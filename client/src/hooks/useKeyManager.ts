@@ -13,6 +13,18 @@ interface KeyCommand {
   type?: ActionType;
 }
 
+const getMasterDeck = (): 1 | 2 | null => {
+  const s = useDJStore.getState();
+  const d1 = s.deck1.isPlaying;
+  const d2 = s.deck2.isPlaying;
+  const cross = s.crossFader;
+
+  if (d1 && !d2) return 1;
+  if (!d1 && d2) return 2;
+  if (d1 && d2) return cross >= 0 ? 2 : 1;
+  return null;
+};
+
 // 키 매핑 정의
 const KEY_MAP: Record<string, KeyCommand> = {
   // === DECK 1 (왼쪽) ===
@@ -71,15 +83,22 @@ interface AudioEngine {
       applyFx: (fx: FxType | null) => void;
       startScratchHold: (options?: { grainMs?: number; jumpMs?: number; intensity?: number }) => void;
       stopScratchHold: () => void;
+      setPlaybackRate: (rate: number) => void;
     };
   };
   mixer: {
     adjustCrossFader: (delta: number) => void;
     sync: () => void;
   };
+  peekDeckState: (deckIdx: 1 | 2) => {
+    isPlaying: boolean;
+    durationSec: number;
+    positionSec: number;
+    playbackRate: number;
+  } | null;
 }
 
-export const useInputManager = (audioEngine: AudioEngine) => {
+export const useKeyManager = (audioEngine: AudioEngine) => {
   console.log('[IM] hook mounted');
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
   const cueArmedRef = useRef<{ 1: Set<number>; 2: Set<number> }>({
@@ -159,6 +178,7 @@ export const useInputManager = (audioEngine: AudioEngine) => {
         if (cmd.type === 'TRIGGER') executeTriggerAction(cmd);
       }
     }
+    
   };
 
   const handleKeyUp = (e: KeyboardEvent) => {
@@ -271,10 +291,28 @@ export const useInputManager = (audioEngine: AudioEngine) => {
       const next = useDJStore.getState().fxTargetDeck;
       console.log(`[FX] 적용 대상 덱 변경: Deck ${next}`);
     }
-    // BPM 조정 (TRIGGER 방식)
+    // BPM 조정 (MASTER playbackRate 조절)
     if (command.target === 'bpm') {
-      const delta = command.action === 'UP' ? 1 : -1;
-      updateValue('bpm', delta);
+      const master = getMasterDeck();
+      if (!master) return;
+
+      const state = audioEngine.peekDeckState(master);
+      if (!state) return;
+
+      const STEP = 0.005; // ≈ 0.5% (DJ 감각적으로 적당)
+      const delta = command.action === 'UP' ? STEP : -STEP;
+
+      const nextRate = Math.max(
+        0.5,
+        Math.min(2.0, state.playbackRate + delta)
+      );
+
+      audioEngine.decks[master].setPlaybackRate(nextRate);
+
+      console.log(
+        `[BPM] Deck${master} playbackRate →`,
+        nextRate.toFixed(3)
+      );
     }
   };
 

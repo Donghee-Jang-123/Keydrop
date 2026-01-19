@@ -13,7 +13,7 @@ interface DeckState {
   bass: number;
   filter: number;
   fader: number;
-  isplay: boolean;
+  isPlaying: boolean;
   fx: FxType | null;
   trackTitle: string;
   artist?: string;
@@ -67,11 +67,11 @@ interface DJState {
 export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
   deck1: { 
-    mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
+    mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isPlaying: false, fx: null, 
     trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
   },
   deck2: { 
-    mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
+    mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isPlaying: false, fx: null, 
     trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
   },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
@@ -111,11 +111,11 @@ export const useDJStore = create<DJState>((set) => ({
         return state;
       }),
 
-    setPlayState: (deckIdx, isplay) =>
+    setPlayState: (deckIdx, isPlaying) =>
       set((state) => ({
         [deckIdx === 1 ? 'deck1' : 'deck2']: {
           ...state[deckIdx === 1 ? 'deck1' : 'deck2'],
-          isplay,
+          isPlaying,
         },
       })),
 
