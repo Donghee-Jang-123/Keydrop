@@ -257,6 +257,15 @@ export class Deck {
     this.seek(pos);
   }
 
+  public cue(index: 1 | 2): void {
+    const existing = this.cues.get(index);
+    if (existing === undefined) {
+      this.setCue(index);
+    } else {
+      this.jumpCue(index);
+    }
+  }
+
   // ------------------ EQ/Filter/Fader ------------------
   public setFader(value01: number): void {
     const v = Math.max(0, Math.min(value01, 1));
