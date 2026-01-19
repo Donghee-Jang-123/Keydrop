@@ -387,10 +387,10 @@
     conic-gradient(
       from 135deg,
       transparent 0deg,
-      rgba(255, 255, 255, 0.08) 30deg,
+      rgba(255, 255, 255, 0.15) 30deg,
       transparent 60deg,
       transparent 180deg,
-      rgba(255, 255, 255, 0.08) 210deg,
+      rgba(255, 255, 255, 0.15) 210deg,
       transparent 240deg
     ),
     /* LP 홈 질감 (Repeating Radial) */
