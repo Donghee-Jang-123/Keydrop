@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 5173,
+    strictPort: true,
+    open: true,
     proxy: {
       // 1. 일반 API 요청 중계 (/api 로 시작하면 8080으로 보냄)
       '/api': {

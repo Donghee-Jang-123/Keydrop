@@ -4,7 +4,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update # 엔티티에 맞춰 테이블을 자동으로 생성/수정
     show-sql: true
 
   data:
