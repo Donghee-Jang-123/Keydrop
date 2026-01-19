@@ -6,6 +6,7 @@ import { fetchMusicBlobByUrl } from '../api/musicApi';
 import DeckPanel from '../components/DeckPanel';
 import MixerPanel from '../components/MixerPanel';
 import LibraryPanel from '../components/LibraryPanel';
+import WaveformBar from '../components/WaveformBar';
 
 export default function DJPlayModePage() {
   console.log('[PAGE] DJPlayModePage render');
@@ -113,7 +114,12 @@ export default function DJPlayModePage() {
         </div>
       </header>
 
-      <section className="kdWavePlaceholder" aria-label="Waveform placeholder" />
+      <section className="kdWavePlaceholder" aria-label="Waveform">
+        <div className="kdWaveStack">
+          <WaveformBar deckIdx={1} variant="top" />
+          <WaveformBar deckIdx={2} variant="top" />
+        </div>
+      </section>
 
       <main className="kdMain">
         <DeckPanel deckIdx={1} side="left" meta={deck1Meta} />

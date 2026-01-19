@@ -900,3 +900,40 @@
 .library__row--selected {
   background: rgba(255,255,255,0.10);
 }
+
+.kdWaveStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wave {
+  position: relative;
+  height: 48px;
+  overflow: hidden;
+}
+
+.wave--top {
+  height: 56px;
+}
+
+.wave__bars {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.wave__bar {
+  width: 2px;
+  margin-right: 1px;
+  background: #888;
+}
+
+.wave__playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: #ff2d55;
+}

@@ -18,6 +18,37 @@ const fxToLower = (fx: FxType): FXTypeLower => {
   return 'kick';
 };
 
+function buildPeaks(buffer: AudioBuffer, bars = 1200): Float32Array {
+  // bars: 화면 가로폭과 비슷한 “막대 개수”
+  // top-wave는 1200~2000 추천, deck-wave는 600~1200 추천
+  const ch0 = buffer.getChannelData(0);
+  const len = ch0.length;
+
+  const peaks = new Float32Array(bars);
+  const step = Math.max(1, Math.floor(len / bars));
+
+  for (let i = 0; i < bars; i++) {
+    const start = i * step;
+    const end = Math.min(len, start + step);
+
+    let max = 0;
+    for (let j = start; j < end; j++) {
+      const v = Math.abs(ch0[j]);
+      if (v > max) max = v;
+    }
+    peaks[i] = max; // 0..1 근처
+  }
+
+  // 살짝 정규화(너무 작은 곡이 안 보이는 것 방지)
+  let globalMax = 0;
+  for (let i = 0; i < peaks.length; i++) globalMax = Math.max(globalMax, peaks[i]);
+  if (globalMax > 0) {
+    for (let i = 0; i < peaks.length; i++) peaks[i] = peaks[i] / globalMax;
+  }
+
+  return peaks;
+}
+
 type DeckParams = { mid01: number; bass01: number; filter01: number; fader01: number };
 
 class KeydropAudioEngineAdapter {
@@ -141,6 +172,9 @@ class KeydropAudioEngineAdapter {
         void this.ensureGraph().then(async () => {
           const buf = await this.decodeFile(file);
           this.getDeck(1).load(buf);
+
+          const peaks = buildPeaks(buf, 1400);
+          useDJStore.getState().actions.setWaveform(1, peaks);
         });
       },
       applyFx: (fx: FxType | null) => {
@@ -204,6 +238,9 @@ class KeydropAudioEngineAdapter {
         void this.ensureGraph().then(async () => {
           const buf = await this.decodeFile(file);
           this.getDeck(2).load(buf);
+
+          const peaks = buildPeaks(buf, 1400);
+          useDJStore.getState().actions.setWaveform(2, peaks);
         });
       },
       applyFx: (fx: FxType | null) => {
