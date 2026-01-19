@@ -1,8 +1,6 @@
+import Routing from "./pages/Routing";
 import './App.css';
-import DJPlayModePage from './pages/DJPlayModePage';
 
-function App() {
-  return <DJPlayModePage />;
+export default function App() {
+  return <Routing />;
 }
-
-export default App;
