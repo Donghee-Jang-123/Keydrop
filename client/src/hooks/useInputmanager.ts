@@ -69,6 +69,8 @@ interface AudioEngine {
       jumpToCue: (index: number) => void;
       togglePlay: () => void;
       applyFx: (fx: FxType | null) => void;
+      startScratchHold: (options?: { grainMs?: number; jumpMs?: number; intensity?: number }) => void;
+      stopScratchHold: () => void;
     };
   };
   mixer: {
@@ -78,12 +80,13 @@ interface AudioEngine {
 }
 
 export const useInputManager = (audioEngine: AudioEngine) => {
+  console.log('[IM] hook mounted');
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
   const requestRef = useRef<number | null>(null);
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
   // Zustand 액션 가져오기
-  const { updateValue, setPlayState, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck } = useDJStore.getState().actions;
+  const { updateValue, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck } = useDJStore.getState().actions;
 
   // e.code를 KEY_MAP에서 사용하는 문자열로 정규화
   // 예) KeyG -> "G", Digit1 -> "1", Semicolon -> ";", ShiftLeft -> "SHIFTLEFT"
@@ -99,7 +102,7 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    console.log('[SHIFT DEBUG]', { code: e.code, key: e.key, location: e.location });
+    console.log('[IM] keydown raw', e.code, e.key, e.location);
     let keyCode = normalizeKeyCode(e);
 
     if (
@@ -165,6 +168,10 @@ export const useInputManager = (audioEngine: AudioEngine) => {
       setFx(null, deckAtKeyDown);
       audioEngine.decks[deckAtKeyDown].applyFx(null);
     }
+
+    if (cmd.action === 'SCRATCH' && cmd.deck) {
+      audioEngine.decks[cmd.deck].stopScratchHold();
+    }
   };
 
   const updateLoop = () => {
@@ -180,6 +187,15 @@ export const useInputManager = (audioEngine: AudioEngine) => {
 
   // HOLD 타입의 키를 처리하는 함수
   const processHoldAction = (command: KeyCommand) => {
+    if (command.action === 'SCRATCH' && command.deck) {
+      audioEngine.decks[command.deck].startScratchHold({
+        grainMs: 45,
+        jumpMs: 22,
+        intensity: 1.0,
+      });
+      return;
+    }
+    
     if (!command.target) return;
     const delta = command.action === 'UP' || command.action === 'RIGHT' ? 0.01 : -0.01;
     if (command.deck) {
@@ -201,10 +217,6 @@ export const useInputManager = (audioEngine: AudioEngine) => {
       }
       if (command.action === 'PLAY') {
         audioEngine.decks[command.deck].togglePlay();
-        // UI 상태도 같이 토글 (Deck 1/2의 isplay)
-        const state = useDJStore.getState();
-        const current = command.deck === 1 ? state.deck1.isplay : state.deck2.isplay;
-        setPlayState(command.deck, !current);
       }
       if (command.action === 'LOAD') {
         requestLoadSelectedToDeck(command.deck);
@@ -235,11 +247,13 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   };
 
   useEffect(() => {
-  window.addEventListener('keydown', handleKeyDown, true);
-  window.addEventListener('keyup', handleKeyUp, true);
-  requestRef.current = requestAnimationFrame(updateLoop);
+    console.log('[IM] effect attach listeners');
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+    requestRef.current = requestAnimationFrame(updateLoop);
 
   return () => {
+    console.log('[IM] effect cleanup listeners');
     window.removeEventListener('keydown', handleKeyDown, true);
     window.removeEventListener('keyup', handleKeyUp, true);
     if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);

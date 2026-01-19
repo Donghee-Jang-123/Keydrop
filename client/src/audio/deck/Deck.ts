@@ -4,7 +4,6 @@ export class Deck {
   public readonly id: DeckId;
   private readonly ctx: AudioContext;
 
-  // Nodes
   private readonly bassNode: BiquadFilterNode;   // low-shelf
   private readonly midNode: BiquadFilterNode;    // peaking
   private readonly filterNode: BiquadFilterNode; // lowpass
@@ -23,6 +22,11 @@ export class Deck {
   private reverseBuffer: AudioBuffer | null = null;
   private scratchGain!: GainNode;
   private scratchTimer: number | null = null;
+
+  private scratchHoldTimer: number | null = null;
+  private scratchHoldWasPlaying = false;
+  private scratchHoldBasePos = 0;
+  private scratchHoldDir: 1 | -1 = 1;
 
   constructor(ctx: AudioContext, id: DeckId) {
     this.ctx = ctx;
@@ -61,6 +65,7 @@ export class Deck {
   }
 
   public load(buffer: AudioBuffer): void {
+    this.stopScratchHold();
     this.stop(true);
     this.buffer = buffer;
     this.offsetSec = 0;
@@ -116,8 +121,72 @@ export class Deck {
   }
 
   public getBuffer(): AudioBuffer | null {
-  return this.buffer;
-}
+    return this.buffer;
+  }
+
+  public startScratchHold(options?: {
+    grainMs?: number;    // 한 조각 길이(40~90)
+    jumpMs?: number;     // 반복 간격(20~60)
+    intensity?: number;  // 0..1 (더 과격)
+  }): void {
+    if (!this.buffer || !this.reverseBuffer) return;
+
+    // 이미 홀드 스크래치 중이면 중복 시작 방지
+    if (this.scratchHoldTimer !== null) return;
+
+    const grainMs = options?.grainMs ?? 45;
+    const jumpMs = options?.jumpMs ?? 22;
+    const intensity = options?.intensity ?? 1.0;
+
+    this.scratchHoldWasPlaying = this.isPlaying;
+    this.scratchHoldBasePos = this.getPositionSec();
+    this.scratchHoldDir = 1;
+
+    // 재생 중이면 멈추고 스크래치만 들리게
+    if (this.scratchHoldWasPlaying) this.stop(false);
+
+    const grainSec = grainMs / 1000;
+    const fadeSec = Math.min(0.015, grainSec * 0.3);
+    const maxOffset = 0.12 * intensity; // ✅ 왕복 폭(초). 너무 크면 불쾌하니 0.08~0.18 사이 추천
+
+    this.scratchHoldTimer = window.setInterval(() => {
+      if (!this.buffer || !this.reverseBuffer) return;
+
+      // base를 중심으로 +, -로 왔다갔다
+      const target = Math.max(
+        0,
+        Math.min(this.buffer.duration - grainSec, this.scratchHoldBasePos + this.scratchHoldDir * maxOffset)
+      );
+
+      this.playGrain(this.scratchHoldDir, target, grainSec, fadeSec);
+
+      // 방향 전환
+      this.scratchHoldDir = (this.scratchHoldDir === 1 ? -1 : 1);
+    }, jumpMs);
+  }
+
+  public stopScratchHold(): void {
+    if (this.scratchHoldTimer !== null) {
+      window.clearInterval(this.scratchHoldTimer);
+      this.scratchHoldTimer = null;
+    }
+
+    // 원래 위치로 복귀
+    if (this.buffer) {
+      this.seek(this.scratchHoldBasePos);
+    }
+
+    // 원래 재생 중이었으면 다시 재생
+    if (this.scratchHoldWasPlaying) {
+      try {
+        this.play();
+      } catch {
+        // ignore
+      }
+    }
+
+    this.scratchHoldWasPlaying = false;
+  }
 
 
   private makeReversedBuffer(buffer: AudioBuffer): AudioBuffer {
@@ -134,7 +203,7 @@ export class Deck {
 }
 
   public play(): void {
-    if (!this.buffer) throw new Error(`Deck${this.id}: no buffer loaded`);
+    if (!this.buffer) return;
     if (this.isPlaying) return;
     this.startSourceAt(this.offsetSec);
   }
