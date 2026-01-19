@@ -425,16 +425,17 @@
   display: grid;
   place-items: center;
   background: radial-gradient(circle, rgba(104, 246, 255, 0.28) 0%, rgba(0, 0, 0, 0.55) 70%);
-  border: 1px solid rgba(104, 246, 255, 0.45);
+  border: 3px solid rgba(104, 246, 255);
   color: rgba(255, 255, 255, 0.9);
   font-size: 22px;
   box-shadow: 0 0 40px rgba(104, 246, 255, 0.12);
 }
 .turntable--deck1 .turntable__btnIcon {
   background: radial-gradient(circle, rgba(98, 255, 120, 0.30) 0%, rgba(0, 0, 0, 0.55) 70%);
-  border: 1px solid rgba(98, 255, 120, 0.55);
+  border: 3px solid rgba(98, 255, 120);
   box-shadow: 0 0 40px rgba(98, 255, 120, 0.18);
 }
+
 .turntable__btnKey {
   position: absolute;  
   bottom: 20px;       
