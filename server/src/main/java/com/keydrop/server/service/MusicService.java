@@ -1,6 +1,6 @@
 package com.keydrop.server.service;
 
-import com.keydrop.server.controller.dto.MusicDto;
+import com.keydrop.server.dto.MusicDto;
 import com.keydrop.server.domain.Music;
 import com.keydrop.server.repository.MusicRepository;
 import org.springframework.beans.factory.annotation.Value;

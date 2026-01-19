@@ -1,4 +1,4 @@
-package com.keydrop.server.controller.dto;
+package com.keydrop.server.dto;
 
 public record MusicDto(
     long musicId,

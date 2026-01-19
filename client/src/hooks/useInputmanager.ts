@@ -259,4 +259,4 @@ export const useInputManager = (audioEngine: AudioEngine) => {
     if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
   };
 }, []);
-};
+}
