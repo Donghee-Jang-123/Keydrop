@@ -21,6 +21,7 @@ interface DeckPanelProps {
 
 const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
   const deck = useDJStore((s) => (deckIdx === 1 ? s.deck1 : s.deck2));
+  const { requestLocalFile } = useDJStore.getState().actions;
 
   // 요청사항: Deck1/Deck2 모두 3x2 버튼(6개)로 통일
   const cue1Key = deckIdx === 1 ? '1' : '8';
@@ -41,7 +42,7 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
         <div className="deckPanel__album" aria-hidden="true" />
         <div className="deckPanel__meta">
           <div className="deckPanel__titleRow">
-            <div className="deckPanel__title">{meta.title}</div>
+            <div className="deckPanel__title">{deck.trackTitle || meta.title}</div>
             <div className="deckPanel__like" aria-hidden="true">
               ♥
             </div>
@@ -52,6 +53,14 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
           <div className="deckPanel__bpmLabel">BPM</div>
           <div className="deckPanel__bpmValue">{meta.bpm}</div>
         </div>
+        <button
+          type="button"
+          className="deckPanel__loadBtn"
+          onClick={() => requestLocalFile(deckIdx)}
+          title={deckIdx === 1 ? 'ShiftLeft' : 'ShiftRight'}
+        >
+          LOAD <span className="deckPanel__loadKey">{deckIdx === 1 ? 'ShiftLeft' : 'ShiftRight'}</span>
+        </button>
       </header>
 
       <div className="deckPanel__subHeader">
@@ -78,14 +87,14 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
               ))}
             </div>
             <div className="deckPanel__turntable">
-              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'V' : 'N'} />
+              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
           </>
         ) : (
           /* Deck2(오른쪽 덱)은 "턴테이블(왼쪽) - 패드(오른쪽)" 배치 */
           <>
             <div className="deckPanel__turntable">
-              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'V' : 'N'} />
+              <Turntable isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
             <div className="deckPanel__pads deckPanel__pads--grid">
               {pads.map((p) => (

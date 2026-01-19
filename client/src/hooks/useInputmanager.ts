@@ -82,7 +82,7 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
   // Zustand 액션 가져오기
-  const { updateValue, setPlayState, toggleFxTargetDeck, setFx } = useDJStore.getState().actions;
+  const { updateValue, setPlayState, toggleFxTargetDeck, setFx, requestLocalFile } = useDJStore.getState().actions;
 
   // e.code를 KEY_MAP에서 사용하는 문자열로 정규화
   // 예) KeyG -> "G", Digit1 -> "1", Semicolon -> ";", ShiftLeft -> "SHIFTLEFT"
@@ -181,8 +181,8 @@ export const useInputManager = (audioEngine: AudioEngine) => {
       audioEngine.mixer.sync();
     }
     if (command.action === 'UPLOAD') {
-      // 여기에 파일을 선택하는 창(Modal)을 띄우는 함수를 연결
-      console.log("Deck 1 파일 업로드 모달 오픈!"); 
+      // 로컬 파일 선택창 열기 (Deck별)
+      if (command.deck) requestLocalFile(command.deck);
     }
 
     // NUMPAD ENTER: FX 적용 대상 덱 토글 (Deck1 <-> Deck2)

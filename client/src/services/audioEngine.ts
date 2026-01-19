@@ -1,56 +1,217 @@
-// 오디오 엔진 더미 구현 (실제 오디오 처리는 나중에 추가)
-// 지금은 "키 입력 → UI 업데이트"만 확인하기 위한 껍데기
+// 친구가 만든 실제 오디오 엔진(client/src/audio/...)을
+// 현재 UI/useInputmanager가 쓰기 좋은 형태로 감싼 어댑터입니다.
+
+import { AudioEngine as CoreEngine } from '../audio/core/AudioEngine';
+import { AudioBus } from '../audio/core/AudioBus';
+import { Deck } from '../audio/deck/Deck';
+import { Mixer } from '../audio/mixer/Mixer';
+import { FXRack, type FXType as FXTypeLower } from '../audio/fx/FXRack';
+import { useDJStore } from '../store/useDJStore';
 
 export type ControlTarget = 'mid' | 'bass' | 'filter' | 'fader' | 'crossFader' | 'bpm';
 export type FxType = 'CRUSH' | 'FLANGER' | 'SLICER' | 'KICK';
 
-class DeckController {
-  private deckNumber: number;
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+const clamp11 = (v: number) => Math.max(-1, Math.min(1, v));
 
-  constructor(deckNumber: number) {
-    this.deckNumber = deckNumber;
+const fxToLower = (fx: FxType): FXTypeLower => {
+  if (fx === 'CRUSH') return 'crush';
+  if (fx === 'FLANGER') return 'flanger';
+  if (fx === 'SLICER') return 'slicer';
+  return 'kick';
+};
+
+type DeckParams = { mid01: number; bass01: number; filter01: number; fader01: number };
+
+class KeydropAudioEngineAdapter {
+  private readonly engine = CoreEngine.instance;
+  private bus: AudioBus | null = null;
+  private mixer: Mixer | null = null;
+  private deck1: Deck | null = null;
+  private deck2: Deck | null = null;
+  private fx1: FXRack | null = null;
+  private fx2: FXRack | null = null;
+
+  private initPromise: Promise<void> | null = null;
+
+  private params: Record<1 | 2, DeckParams> = {
+    1: { mid01: 0.5, bass01: 0.5, filter01: 0.5, fader01: 1.0 },
+    2: { mid01: 0.5, bass01: 0.5, filter01: 0.5, fader01: 1.0 },
+  };
+  private cross = 0;
+  private activeFx: Record<1 | 2, FxType | null> = { 1: null, 2: null };
+
+  private async ensureGraph(): Promise<void> {
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      await this.engine.resume();
+
+      if (!this.bus) this.bus = new AudioBus(this.engine.ctx);
+      if (!this.deck1) this.deck1 = new Deck(this.engine.ctx, 1);
+      if (!this.deck2) this.deck2 = new Deck(this.engine.ctx, 2);
+
+      if (!this.fx1) this.fx1 = new FXRack(this.engine.ctx);
+      if (!this.fx2) this.fx2 = new FXRack(this.engine.ctx);
+
+      if (!this.mixer) {
+        const mixer = new Mixer(this.engine.ctx);
+
+        this.deck1.output.connect(this.fx1.input);
+        this.deck2.output.connect(this.fx2.input);
+
+        mixer.connectDeck1(this.fx1.output);
+        mixer.connectDeck2(this.fx2.output);
+
+        mixer.connectTo(this.bus.masterGain);
+        this.mixer = mixer;
+      }
+
+      // Zustand 초기값으로 파라미터 싱크
+      const s = useDJStore.getState();
+      this.params[1] = { mid01: s.deck1.mid, bass01: s.deck1.bass, filter01: s.deck1.filter, fader01: s.deck1.fader };
+      this.params[2] = { mid01: s.deck2.mid, bass01: s.deck2.bass, filter01: s.deck2.filter, fader01: s.deck2.fader };
+      this.cross = s.crossFader;
+
+      this.applyDeckParams(1);
+      this.applyDeckParams(2);
+      this.mixer.setCrossfader(this.cross);
+    })();
+
+    return this.initPromise;
   }
 
-  adjustParam(target: ControlTarget, delta: number): void {
-    console.log(`[Deck ${this.deckNumber}] ${target} 조정: ${delta > 0 ? '+' : ''}${delta.toFixed(3)}`);
+  private getDeck(deck: 1 | 2): Deck {
+    const d = deck === 1 ? this.deck1 : this.deck2;
+    if (!d) throw new Error('Audio graph not ready');
+    return d;
   }
 
-  jumpToCue(index: number): void {
-    console.log(`[Deck ${this.deckNumber}] Cue ${index}로 점프`);
+  private async decodeFile(file: File): Promise<AudioBuffer> {
+    const ab = await file.arrayBuffer();
+    const buf = await this.engine.ctx.decodeAudioData(ab.slice(0));
+    return buf;
   }
 
-  togglePlay(): void {
-    console.log(`[Deck ${this.deckNumber}] 재생/정지 토글`);
+  private getFx(deck: 1 | 2): FXRack {
+    const fx = deck === 1 ? this.fx1 : this.fx2;
+    if (!fx) throw new Error('Audio graph not ready');
+    return fx;
   }
 
-  applyFx(fx: FxType | null): void {
-    console.log(`[Deck ${this.deckNumber}] FX 적용: ${fx ?? 'OFF'}`);
+  private applyDeckParams(deck: 1 | 2) {
+    const d = this.getDeck(deck);
+    const p = this.params[deck];
+
+    // mid/bass: 0..1 -> -12..+12 dB (0.5가 0dB)
+    const midDb = (p.mid01 - 0.5) * 24;
+    const bassDb = (p.bass01 - 0.5) * 24;
+
+    d.setMidGainDb(midDb);
+    d.setBassGainDb(bassDb);
+    d.setFilterValue(p.filter01);
+    d.setFader(p.fader01);
   }
+
+  public readonly decks = {
+    1: {
+      adjustParam: (target: ControlTarget, delta: number) => {
+        void this.ensureGraph().then(() => {
+          const p = this.params[1];
+          if (target === 'mid') p.mid01 = clamp01(p.mid01 + delta);
+          if (target === 'bass') p.bass01 = clamp01(p.bass01 + delta);
+          if (target === 'filter') p.filter01 = clamp01(p.filter01 + delta);
+          if (target === 'fader') p.fader01 = clamp01(p.fader01 + delta);
+          this.applyDeckParams(1);
+        });
+      },
+      jumpToCue: (index: number) => {
+        void this.ensureGraph().then(() => this.getDeck(1).jumpCue(index as 1 | 2));
+      },
+      togglePlay: () => {
+        void this.ensureGraph().then(() => this.getDeck(1).toggle());
+      },
+      loadFile: (file: File) => {
+        void this.ensureGraph().then(async () => {
+          const buf = await this.decodeFile(file);
+          this.getDeck(1).load(buf);
+        });
+      },
+      applyFx: (fx: FxType | null) => {
+        void this.ensureGraph().then(() => {
+          const rack = this.getFx(1);
+          // OFF면 전부 끄기
+          if (!fx) {
+            (['crush', 'flanger', 'slicer', 'kick'] as FXTypeLower[]).forEach((t) => rack.setEnabled(t, false));
+            this.activeFx[1] = null;
+            return;
+          }
+          const next = fxToLower(fx);
+          // 이전 FX는 끄고, 새 FX만 켜기
+          (['crush', 'flanger', 'slicer', 'kick'] as FXTypeLower[]).forEach((t) => rack.setEnabled(t, t === next));
+          this.activeFx[1] = fx;
+        });
+      },
+    },
+    2: {
+      adjustParam: (target: ControlTarget, delta: number) => {
+        void this.ensureGraph().then(() => {
+          const p = this.params[2];
+          if (target === 'mid') p.mid01 = clamp01(p.mid01 + delta);
+          if (target === 'bass') p.bass01 = clamp01(p.bass01 + delta);
+          if (target === 'filter') p.filter01 = clamp01(p.filter01 + delta);
+          if (target === 'fader') p.fader01 = clamp01(p.fader01 + delta);
+          this.applyDeckParams(2);
+        });
+      },
+      jumpToCue: (index: number) => {
+        void this.ensureGraph().then(() => this.getDeck(2).jumpCue(index as 1 | 2));
+      },
+      togglePlay: () => {
+        void this.ensureGraph().then(() => this.getDeck(2).toggle());
+      },
+      loadFile: (file: File) => {
+        void this.ensureGraph().then(async () => {
+          const buf = await this.decodeFile(file);
+          this.getDeck(2).load(buf);
+        });
+      },
+      applyFx: (fx: FxType | null) => {
+        void this.ensureGraph().then(() => {
+          const rack = this.getFx(2);
+          if (!fx) {
+            (['crush', 'flanger', 'slicer', 'kick'] as FXTypeLower[]).forEach((t) => rack.setEnabled(t, false));
+            this.activeFx[2] = null;
+            return;
+          }
+          const next = fxToLower(fx);
+          (['crush', 'flanger', 'slicer', 'kick'] as FXTypeLower[]).forEach((t) => rack.setEnabled(t, t === next));
+          this.activeFx[2] = fx;
+        });
+      },
+    },
+  } as const;
+
+  public readonly mixerApi = {
+    adjustCrossFader: (delta: number) => {
+      void this.ensureGraph().then(() => {
+        this.cross = clamp11(this.cross + delta);
+        this.mixer?.setCrossfader(this.cross);
+      });
+    },
+    sync: () => {
+      // Beat 분석/SyncService는 아직 UI에서 연결하지 않아서 일단 no-op.
+      // 필요하면 master/slave 선택 + BeatAnalysis 연결해서 SyncService로 교체 가능.
+      void this.ensureGraph();
+      console.log('[Mixer] sync requested (not wired yet)');
+    },
+  } as const;
 }
 
-class MixerController {
-  adjustCrossFader(delta: number): void {
-    console.log(`[Mixer] CrossFader 조정: ${delta > 0 ? '+' : ''}${delta.toFixed(3)}`);
-  }
+const adapter = new KeydropAudioEngineAdapter();
 
-  sync(): void {
-    console.log('[Mixer] 비트 싱크 실행');
-  }
-}
-
-// AudioEngine 싱글톤
-export class AudioEngine {
-  public decks: { [key: number]: DeckController };
-  public mixer: MixerController;
-
-  constructor() {
-    this.decks = {
-      1: new DeckController(1),
-      2: new DeckController(2),
-    };
-    this.mixer = new MixerController();
-  }
-}
-
-// 전역 인스턴스 생성
-export const audioEngine = new AudioEngine();
+// useInputmanager가 기대하는 shape
+export const audioEngine = {
+  decks: adapter.decks,
+  mixer: adapter.mixerApi,
+};

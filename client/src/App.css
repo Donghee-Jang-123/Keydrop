@@ -160,6 +160,27 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
 }
 
+.deckPanel__loadBtn {
+  justify-self: end;
+  grid-column: 3;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.deckPanel__loadKey {
+  margin-left: 6px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0;
+}
+
 .deckPanel__album {
   width: 56px;
   height: 56px;

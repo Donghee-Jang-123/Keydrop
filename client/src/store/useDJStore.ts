@@ -14,6 +14,7 @@ interface DeckState {
   fader: number;
   isplay: boolean;
   fx: FxType | null;
+  trackTitle: string;
 }
 
 interface DJState {
@@ -22,6 +23,7 @@ interface DJState {
   crossFader: number;
   bpm: number;
   fxTargetDeck: 1 | 2; // NUMPAD FX가 적용될 덱
+  filePickerDeck: 1 | 2 | null; // 로컬 파일 선택창을 열 덱(요청 상태)
   
   actions: {
     // 통합 업데이트 함수
@@ -29,16 +31,20 @@ interface DJState {
     setPlayState: (deckIdx: 1 | 2, state: boolean) => void;
     toggleFxTargetDeck: () => void;
     setFx: (fx: FxType | null, deckIdx?: 1 | 2) => void;
+    requestLocalFile: (deckIdx: 1 | 2) => void;
+    clearLocalFileRequest: () => void;
+    setTrackTitle: (deckIdx: 1 | 2, title: string) => void;
   };
 }
 
 export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
-  deck1: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null },
-  deck2: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null },
+  deck1: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Lose Control' },
+  deck2: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Hypersilent' },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
   fxTargetDeck: 1,
+  filePickerDeck: null,
 
   actions: {
     updateValue: (target, delta, deckIdx) =>
@@ -88,6 +94,27 @@ export const useDJStore = create<DJState>((set) => ({
           [deckKey]: {
             ...state[deckKey],
             fx,
+          },
+        };
+      }),
+
+    requestLocalFile: (deckIdx) =>
+      set(() => ({
+        filePickerDeck: deckIdx,
+      })),
+
+    clearLocalFileRequest: () =>
+      set(() => ({
+        filePickerDeck: null,
+      })),
+
+    setTrackTitle: (deckIdx, title) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            trackTitle: title,
           },
         };
       }),
