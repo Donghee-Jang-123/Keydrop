@@ -28,7 +28,7 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'F': { deck: 1, action: 'DOWN', target: 'fader', type: 'HOLD' },
   'G': { deck: 1, action: 'PLAY', type: 'TRIGGER' },
   'V': { deck: 1, action: 'SCRATCH', type: 'HOLD' },
-  'SHIFTLEFT': { deck: 1, action: 'UPLOAD', type: 'TRIGGER' },
+  'SHIFTLEFT': { deck: 1, action: 'LOAD', type: 'TRIGGER' },
 
   // === DECK 2 (오른쪽) ===
   '8': { deck: 2, action: 'CUE1', type: 'TRIGGER' },
@@ -43,9 +43,10 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'J': { deck: 2, action: 'DOWN', target: 'fader', type: 'HOLD' },
   'H': { deck: 2, action: 'PLAY', type: 'TRIGGER' },
   'N': { deck: 2, action: 'SCRATCH', type: 'HOLD' },
-  'SHIFTRIGHT': { deck: 2, action: 'UPLOAD', type: 'TRIGGER' },
+  'SHIFTRIGHT': { deck: 2, action: 'LOAD', type: 'TRIGGER' },
 
   // === 글로벌 컨트롤 & Mixer ===
+  'TAB': { action: 'NEXT_TRACK', type: 'TRIGGER' },
   'SPACE': { action: 'BEAT_SYNC', type: 'TRIGGER' },
   'ARROWLEFT': { action: 'LEFT', target: 'crossFader', type: 'HOLD' },
   'ARROWRIGHT': { action: 'RIGHT', target: 'crossFader', type: 'HOLD' },
@@ -82,11 +83,14 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
   // Zustand 액션 가져오기
-  const { updateValue, setPlayState, toggleFxTargetDeck, setFx, requestLocalFile } = useDJStore.getState().actions;
+  const { updateValue, setPlayState, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck } = useDJStore.getState().actions;
 
   // e.code를 KEY_MAP에서 사용하는 문자열로 정규화
   // 예) KeyG -> "G", Digit1 -> "1", Semicolon -> ";", ShiftLeft -> "SHIFTLEFT"
   const normalizeKeyCode = (e: KeyboardEvent) => {
+    if (e.code === 'ShiftLeft') return 'SHIFTLEFT';
+    if (e.code === 'ShiftRight') return 'SHIFTRIGHT';
+
     const code = e.code.toUpperCase();
     if (code.startsWith('KEY')) return code.replace('KEY', '');
     if (code.startsWith('DIGIT')) return code.replace('DIGIT', '');
@@ -95,9 +99,26 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    // 검색창 입력 중일 때는 무시
-    if (e.target instanceof HTMLInputElement) return;
-    const keyCode = normalizeKeyCode(e);
+    console.log('[SHIFT DEBUG]', { code: e.code, key: e.key, location: e.location });
+    let keyCode = normalizeKeyCode(e);
+
+    if (
+      e.code === 'ShiftRight' ||
+      (e.key === 'Shift' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT) ||
+      (e.key === 'Shift' && e.code === '' && e.location === 0) // ✅ 이거 추가
+    ) {
+      keyCode = 'SHIFTRIGHT';
+    }
+
+    const isTyping =
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      (e.target instanceof HTMLElement && e.target.isContentEditable);
+    
+    const allowWhenTyping = keyCode === 'SHIFTLEFT' || keyCode === 'SHIFTRIGHT' || keyCode === 'TAB';
+    
+    if (isTyping && !allowWhenTyping) return;
+
     if (KEY_MAP[keyCode]) {
       e.preventDefault();
       if (!activeKeys.current.has(keyCode)) {
@@ -122,7 +143,16 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   };
 
   const handleKeyUp = (e: KeyboardEvent) => {
-    const keyCode = normalizeKeyCode(e);
+    let keyCode = normalizeKeyCode(e);
+
+    if (
+      e.code === 'ShiftRight' ||
+      (e.key === 'Shift' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT) ||
+      (e.key === 'Shift' && e.code === '' && e.location === 0) // ✅ 이거 추가
+    ) {
+      keyCode = 'SHIFTRIGHT';
+    }
+
     activeKeys.current.delete(keyCode); 
 
     // FX 키는 keyup에서 OFF 처리
@@ -176,6 +206,12 @@ export const useInputManager = (audioEngine: AudioEngine) => {
         const current = command.deck === 1 ? state.deck1.isplay : state.deck2.isplay;
         setPlayState(command.deck, !current);
       }
+      if (command.action === 'LOAD') {
+        requestLoadSelectedToDeck(command.deck);
+      }
+    }
+    if (command.action === 'NEXT_TRACK') {
+      selectNextTrack();
     }
     if (command.action === 'BEAT_SYNC') {
       audioEngine.mixer.sync();
@@ -199,15 +235,14 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   };
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    requestRef.current = requestAnimationFrame(updateLoop);
+  window.addEventListener('keydown', handleKeyDown, true);
+  window.addEventListener('keyup', handleKeyUp, true);
+  requestRef.current = requestAnimationFrame(updateLoop);
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown, true);
+    window.removeEventListener('keyup', handleKeyUp, true);
+    if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
+  };
+}, []);
 };

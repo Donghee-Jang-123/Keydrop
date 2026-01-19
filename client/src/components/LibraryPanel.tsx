@@ -1,15 +1,49 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { fetchMusicList } from '../api/musicApi';
+import { useDJStore } from '../store/useDJStore';
+
+const formatTime = (sec: number) => {
+  const s = Math.max(0, Math.floor(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, '0')}`;
+};
 
 const LibraryPanel: React.FC = () => {
-  const genres = ['Dance', 'EDM', 'House', 'Techno', 'Trance', 'Dubstep', 'Drum’n’Bass', 'Hip-Hop', 'Trap', 'Latin'];
-  const rows = [
-    { title: 'Empire Of The Sun, DJ HEARTSTRING', bpm: 141, dur: '5:19' },
-    { title: 'Chris Lake, Lady (Confidence Man)', bpm: 128, dur: '3:49' },
-    { title: 'Delilah Montagu, Fred Again..', bpm: 132, dur: '4:20' },
-    { title: 'Need Your Body (Exported Remix)', bpm: 128, dur: '3:57' },
-    { title: 'LSDNS', bpm: 123, dur: '3:15' },
-    { title: 'Tommy Trash', bpm: 128, dur: '4:12' },
-  ];
+  const tracks = useDJStore((s) => s.libraryTracks);
+  const selectedIndex = useDJStore((s) => s.librarySelectedIndex);
+
+  const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);
+  const { setLibraryTracks, requestLoadMusicFromDb } = useDJStore((s) => s.actions);
+
+  const deck1 = useDJStore((s) => s.deck1);
+  const deck2 = useDJStore((s) => s.deck2);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const list = await fetchMusicList();
+        if (!alive) return;
+        setLibraryTracks(list);
+      } catch (e: any) {
+        if (!alive) return;
+        setLibraryTracks([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const genres = useMemo(() => {
+    const set = new Set<string>();
+    tracks.forEach((t) => {
+      const g = (t.genre ?? '').trim();
+      if (g) set.add(g);
+    });
+    return Array.from(set);
+  }, [tracks]);
 
   return (
     <section className="library" aria-label="Library">
@@ -47,14 +81,30 @@ const LibraryPanel: React.FC = () => {
               <div className="library__col library__col--bpm">BPM</div>
               <div className="library__col library__col--dur">Time</div>
             </div>
-            {rows.map((r) => (
-              <div key={r.title} className="library__row">
-                <div className="library__col library__col--play">▶</div>
-                <div className="library__col library__col--title">{r.title}</div>
-                <div className="library__col library__col--bpm">{r.bpm}</div>
-                <div className="library__col library__col--dur">{r.dur}</div>
+
+          {tracks.map((t, idx) => (
+            <div
+              key={t.musicId}
+              className={`library__row ${idx === selectedIndex ? 'library__row--selected' : ''}`}
+            >
+              <div className="library__col library__col--play">
+                <button
+                  type="button"
+                  onClick={() => requestLoadMusicFromDb(fxTargetDeck, t)}
+                  aria-label={`load ${t.title} to deck ${fxTargetDeck}`}
+                >
+                  ▶
+                </button>
               </div>
-            ))}
+
+              <div className="library__col library__col--title">
+                {t.title} - {t.artists}
+              </div>
+              <div className="library__col library__col--bpm">{t.bpm}</div>
+              <div className="library__col library__col--dur">{formatTime(t.duration)}</div>
+            </div>
+          ))}
+
           </div>
 
           <div className="library__table">
@@ -64,14 +114,28 @@ const LibraryPanel: React.FC = () => {
               <div className="library__col library__col--bpm">BPM</div>
               <div className="library__col library__col--dur">Time</div>
             </div>
-            {rows.map((r) => (
-              <div key={`np-${r.title}`} className="library__row">
-                <div className="library__col library__col--play">⏵</div>
-                <div className="library__col library__col--title">{r.title}</div>
-                <div className="library__col library__col--bpm">{r.bpm}</div>
-                <div className="library__col library__col--dur">{r.dur}</div>
+
+            <div className="library__row">
+              <div className="library__col library__col--play">⏵</div>
+              <div className="library__col library__col--title">
+                Deck1: {deck1.trackTitle}
               </div>
-            ))}
+              <div className="library__col library__col--bpm">{useDJStore.getState().deck1.trackBpm ?? '-'}</div>
+              <div className="library__col library__col--dur">
+                {deck1.durationSec ? formatTime(deck1.durationSec) : '-'}
+              </div>
+            </div>
+
+            <div className="library__row">
+              <div className="library__col library__col--play">⏵</div>
+              <div className="library__col library__col--title">
+                Deck2: {deck2.trackTitle}
+              </div>
+              <div className="library__col library__col--bpm">{useDJStore.getState().deck2.trackBpm ?? '-'}</div>
+              <div className="library__col library__col--dur">
+                {deck2.durationSec ? formatTime(deck2.durationSec) : '-'}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -80,4 +144,3 @@ const LibraryPanel: React.FC = () => {
 };
 
 export default LibraryPanel;
-

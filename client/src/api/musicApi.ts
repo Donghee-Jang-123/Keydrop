@@ -10,3 +10,10 @@ export function resolveMusicUrl(url: string): string {
   if (url.startsWith("http")) return url;
   return url;
 }
+
+export async function fetchMusicBlobByUrl(url: string): Promise<Blob> {
+  const resolved = resolveMusicUrl(url);
+  const res = await fetch(resolved);
+  if (!res.ok) throw new Error(`fetchMusicBlobByUrl failed: ${res.status}`);
+  return await res.blob();
+}

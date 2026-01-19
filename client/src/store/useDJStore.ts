@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { Music } from '../types/music';
 
 // 1. 제어 대상 타입 정의
 export type ControlTarget = 'mid' | 'bass' | 'filter' | 'fader' | 'crossFader' | 'bpm';
@@ -15,6 +16,9 @@ interface DeckState {
   isplay: boolean;
   fx: FxType | null;
   trackTitle: string;
+  artist?: string;
+  trackBpm?: number;
+  durationSec?: number;
 }
 
 interface DJState {
@@ -25,26 +29,43 @@ interface DJState {
   fxTargetDeck: 1 | 2; // NUMPAD FX가 적용될 덱
   filePickerDeck: 1 | 2 | null; // 로컬 파일 선택창을 열 덱(요청 상태)
   
+  pendingDbLoad: {
+    deckIdx: 1 | 2;
+    track: Music;
+    nonce: number;
+  } | null;
+
+  libraryTracks: Music[];
+  librarySelectedIndex: number;
+
   actions: {
     // 통합 업데이트 함수
     updateValue: (target: ControlTarget, delta: number, deckIdx?: 1 | 2) => void;
     setPlayState: (deckIdx: 1 | 2, state: boolean) => void;
     toggleFxTargetDeck: () => void;
     setFx: (fx: FxType | null, deckIdx?: 1 | 2) => void;
+    requestLoadMusicFromDb: (deckIdx: 1 | 2, track: Music) => void;
+    clearDbLoadRequest: () => void;
+    setDeckMetaFromDb: (deckIdx: 1 | 2, meta: { title: string; artist: string; bpm: number; durationSec: number }) => void;
     requestLocalFile: (deckIdx: 1 | 2) => void;
     clearLocalFileRequest: () => void;
     setTrackTitle: (deckIdx: 1 | 2, title: string) => void;
+    setLibraryTracks: (tracks: Music[]) => void;
+    selectNextTrack: () => void;
+    requestLoadSelectedToDeck: (deckIdx: 1 | 2) => void;
   };
 }
 
 export const useDJStore = create<DJState>((set) => ({
-  // 초기 상태 설정
+  pendingDbLoad: null,
   deck1: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Lose Control' },
   deck2: { mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, trackTitle: 'Hypersilent' },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
   fxTargetDeck: 1,
   filePickerDeck: null,
+  libraryTracks: [],
+  librarySelectedIndex: 0,
 
   actions: {
     updateValue: (target, delta, deckIdx) =>
@@ -118,6 +139,55 @@ export const useDJStore = create<DJState>((set) => ({
           },
         };
       }),
+
+    requestLoadMusicFromDb: (deckIdx, track) =>
+      set(() => ({
+        pendingDbLoad: {
+          deckIdx,
+          track,
+          nonce: Date.now(),
+        },
+      })),
+
+    clearDbLoadRequest: () =>
+      set(() => ({
+        pendingDbLoad: null,
+      })),
+
+    setDeckMetaFromDb: (deckIdx, meta) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            trackTitle: meta.title,
+            artist: meta.artist,
+            trackBpm: meta.bpm,
+            durationSec: meta.durationSec,
+          },
+        } as any;
+      }),
+    setLibraryTracks: (tracks) =>
+      set(() => ({
+        libraryTracks: tracks,
+        librarySelectedIndex: tracks.length ? 0 : 0,
+      })),
+
+    selectNextTrack: () =>
+      set((state) => {
+        const n = state.libraryTracks.length;
+        if (!n) return state;
+        const next = (state.librarySelectedIndex + 1) % n;
+        return { librarySelectedIndex: next };
+      }),
+
+    requestLoadSelectedToDeck: (deckIdx) =>
+      set((state) => {
+        const t = state.libraryTracks[state.librarySelectedIndex];
+        if (!t) return state;
+        return {
+          pendingDbLoad: { deckIdx, track: t, nonce: Date.now() }, };
+      }),      
   },
 }));
 
