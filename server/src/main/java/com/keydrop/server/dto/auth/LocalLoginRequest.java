@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter @Setter
 public class LocalLoginRequest {
   @NotBlank
-  private String username;
+  private String email;
   @NotBlank
   private String password;
 }

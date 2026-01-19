@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { localLogin } from "../../api/authApi";
+import { localLogin, googleLogin } from "../../api/authApi";
+import { GoogleLogin } from "@react-oauth/google";
 import { authStore } from "../../store/authStore";
 
 export default function LoginPage() {
   const nav = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
@@ -13,7 +14,7 @@ export default function LoginPage() {
     e.preventDefault();
     setErr(null);
     try {
-      const res = await localLogin({ username, password });
+      const res = await localLogin({ email, password });
       authStore.setToken(res.accessToken);
       nav("/dj");
     } catch {
@@ -25,16 +26,27 @@ export default function LoginPage() {
     <div style={{ maxWidth: 420, margin: "60px auto" }}>
       <h2>Login</h2>
 
-      <button
-        type="button"
-        onClick={() => alert("구글 로그인 SDK는 다음 단계에서 붙입니다.")}
-        style={{ width: "100%", padding: 12, marginBottom: 12 }}
-      >
-        Sign in with Google
-      </button>
+      <GoogleLogin
+        onSuccess={async (credRes) => {
+          try {
+            const credential = credRes.credential;
+            if (!credential) throw new Error("No credential");
+
+            const res = await googleLogin({ credential });
+            authStore.setToken(res.accessToken);
+
+            if (res.isNewUser) nav("/signup"); // 추가정보 받는 회원가입 페이지
+            else nav("/dj");
+          } catch {
+            alert("구글 로그인 실패");
+          }
+        }}
+        onError={() => alert("구글 로그인 실패")}
+        useOneTap={false}
+      />
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
-        <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
         {err && <div style={{ color: "crimson" }}>{err}</div>}
         <button type="submit" style={{ padding: 12 }}>
