@@ -62,7 +62,9 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
       </div>
 
       {/* 덱 내부 파형 (placeholder) */}
-      <WaveformBar deckIdx={deckIdx} variant="deck" />
+      <div className="deckPanel__wavePlaceholder">
+        <WaveformBar deckIdx={deckIdx} variant="deck" />
+      </div>
 
       <div className="deckPanel__body">
         {/* Deck1(왼쪽 덱)은 "패드(왼쪽) - 턴테이블(오른쪽)" 배치 */}

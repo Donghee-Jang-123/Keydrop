@@ -19,6 +19,7 @@ interface DeckState {
   artist?: string;
   trackBpm?: number;
   durationSec?: number;
+  positionSec?: number;
   waveformPeaks?: Float32Array | null;
 }
 
@@ -58,6 +59,8 @@ interface DJState {
     requestLoadSelectedToDeck: (deckIdx: 1 | 2) => void;
     setWaveform: (deckIdx: 1 | 2, peaks: Float32Array) => void;
     setControlActive: (id: string, active: boolean) => void;
+    setPositionSec: (deckIdx: 1 | 2, positionSec: number) => void;
+    setDurationSec: (deckIdx: 1 | 2, durationSec: number) => void;
   };
 }
 
@@ -65,11 +68,11 @@ export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
   deck1: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, waveformPeacks: null,
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
   },
   deck2: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, waveformPeacks: null,
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
   },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
@@ -178,6 +181,7 @@ export const useDJStore = create<DJState>((set) => ({
             artist: meta.artist,
             trackBpm: meta.bpm,
             durationSec: meta.durationSec,
+            positionSec: 0,
           },
         } as any;
       }),
@@ -220,6 +224,28 @@ export const useDJStore = create<DJState>((set) => ({
           [id]: active,
         },
       })),
+
+    setPositionSec: (deckIdx, positionSec) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            positionSec,
+          },
+        } as any;
+      }),
+
+    setDurationSec: (deckIdx, durationSec) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            durationSec,
+          },
+        } as any;
+      }),
   },
 }));
 

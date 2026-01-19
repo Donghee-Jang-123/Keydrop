@@ -115,6 +115,15 @@ class KeydropAudioEngineAdapter {
     return d;
   }
 
+  // UI 폴링용: 그래프가 준비되어 있고 버퍼가 로드된 경우에만 상태를 반환
+  public peekDeckState(deck: 1 | 2): { isPlaying: boolean; durationSec: number; positionSec: number } | null {
+    const d = deck === 1 ? this.deck1 : this.deck2;
+    if (!d) return null;
+    if (!d.getBuffer()) return null;
+    const s = d.getState();
+    return { isPlaying: s.isPlaying, durationSec: s.durationSec, positionSec: s.positionSec };
+  }
+
   private async decodeFile(file: File): Promise<AudioBuffer> {
     const ab = await file.arrayBuffer();
     const buf = await this.engine.ctx.decodeAudioData(ab.slice(0));
@@ -296,4 +305,5 @@ const adapter = new KeydropAudioEngineAdapter();
 export const audioEngine = {
   decks: adapter.decks,
   mixer: adapter.mixerApi,
+  peekDeckState: (deckIdx: 1 | 2) => adapter.peekDeckState(deckIdx),
 };

@@ -8,6 +8,13 @@ import MixerPanel from '../components/MixerPanel';
 import LibraryPanel from '../components/LibraryPanel';
 import WaveformBar from '../components/WaveformBar';
 
+function fmtTime(sec: number | undefined) {
+  const s = Math.max(0, Math.floor(sec ?? 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, '0')}`;
+}
+
 export default function DJPlayModePage() {
   console.log('[PAGE] DJPlayModePage render');
   useInputManager(audioEngine);
@@ -23,6 +30,8 @@ export default function DJPlayModePage() {
     toggleFxTargetDeck,
     setDeckMetaFromDb,
     clearDbLoadRequest,
+    setPositionSec,
+    setDurationSec,
   } = useDJStore((s) => s.actions);
 
   const deck1 = useDJStore((s) => s.deck1);
@@ -74,20 +83,43 @@ export default function DJPlayModePage() {
     };
   }, [pendingDbLoad, setPlayState, setDeckMetaFromDb, setTrackTitle, clearDbLoadRequest]);
 
+  // 재생 중 positionSec/durationSec를 주기적으로 store에 반영 (playhead + 시간 표시용)
+  useEffect(() => {
+    const tick = () => {
+      const s1 = audioEngine.peekDeckState(1);
+      if (s1) {
+        setPositionSec(1, s1.positionSec);
+        setDurationSec(1, s1.durationSec);
+        setPlayState(1, s1.isPlaying);
+      }
+
+      const s2 = audioEngine.peekDeckState(2);
+      if (s2) {
+        setPositionSec(2, s2.positionSec);
+        setDurationSec(2, s2.durationSec);
+        setPlayState(2, s2.isPlaying);
+      }
+    };
+
+    // 너무 잦은 렌더를 피하려고 100ms 폴링
+    const id = window.setInterval(tick, 100);
+    return () => window.clearInterval(id);
+  }, [setPositionSec, setDurationSec, setPlayState]);
+
   const deck1Meta = {
     title: deck1.trackTitle,
     artist: deck1.artist ?? '',
     bpm: deck1.trackBpm ?? 0,
-    time: '0:00',
-    duration: deck1.durationSec ? `0:00 / ${Math.floor(deck1.durationSec / 60)}:${String(deck1.durationSec % 60).padStart(2, '0')}` : '-',
+    time: fmtTime(deck1.positionSec),
+    duration: deck1.durationSec ? fmtTime(deck1.durationSec) : '-',
   };
 
   const deck2Meta = {
     title: deck2.trackTitle,
     artist: deck2.artist ?? '',
     bpm: deck2.trackBpm ?? 0,
-    time: '0:00',
-    duration: deck2.durationSec ? `0:00 / ${Math.floor(deck2.durationSec / 60)}:${String(deck2.durationSec % 60).padStart(2, '0')}` : '-',
+    time: fmtTime(deck2.positionSec),
+    duration: deck2.durationSec ? fmtTime(deck2.durationSec) : '-',
   };
 
   return (
@@ -95,16 +127,15 @@ export default function DJPlayModePage() {
       <header className="kdTop">
         <div className="kdTop__brand">
           <div className="kdLogo">
-            Key<span className="kdLogo__accent">DROP</span>
+            KEY<span className="kdLogo__accent">DROP</span>
           </div>
           <div className="kdTop__tagline">Turn your keyboard into a stage</div>
         </div>
 
         <div className="kdTop__right">
-          <div className="kdTop__kbdPlaceholder" aria-hidden="true" />
 
           <button className="kdTop__liveBtn" type="button" onClick={toggleFxTargetDeck}>
-            LIVE (Deck {fxTargetDeck})
+            LIVE
           </button>
 
           <button className="kdTop__recBtn" type="button" aria-label="Record" />
@@ -117,7 +148,6 @@ export default function DJPlayModePage() {
       <section className="kdWavePlaceholder" aria-label="Waveform">
         <div className="kdWaveStack">
           <WaveformBar deckIdx={1} variant="top" />
-          <WaveformBar deckIdx={2} variant="top" />
         </div>
       </section>
 
