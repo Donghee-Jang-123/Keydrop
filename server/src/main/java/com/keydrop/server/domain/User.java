@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "users",
   uniqueConstraints = {
     @UniqueConstraint(name="uq_users_provider", columnNames={"provider", "provider_id"}),
-    @UniqueConstraint(name="uq_users_username", columnNames={"username"})
+    @UniqueConstraint(name="uq_users_email", columnNames={"email"})
   }
 )
 @Getter
@@ -24,24 +24,25 @@ public class User {
   private Long userId;
 
   @Column(nullable = false, length = 50)
-  private String username;
+  private String email;
 
   @Column(nullable = false, length = 50)
   private String nickname;
 
   @Column(nullable = false, length = 20)
-  private String provider; // "GOOGLE" or "LOCAL"
+  private String provider;
 
   @Column(name = "provider_id", length = 255)
   private String providerId;
 
   @Column(length = 255)
-  private String email;
+  private String password;
 
-  @Column(length = 255)
-  private String password; // LOCAL일 때만 사용 (BCrypt 해시 저장)
-
+  @Column(nullable = false)
   private LocalDate birthDate;
+
+  @Column(nullable = false)
+  private String djLevel;
 
   @Column(nullable = false)
   private LocalDateTime createdAt;
@@ -52,7 +53,10 @@ public class User {
     if (provider == null) provider = "GOOGLE";
   }
 
-  public void changePassword(String encoded) {
-    this.password = encoded;
+  public void completeProfile(String email, String nickname, LocalDate birthDate, String djLevel) {
+    this.email = email;
+    this.nickname = nickname;
+    this.birthDate = birthDate;
+    this.djLevel = djLevel;
   }
 }

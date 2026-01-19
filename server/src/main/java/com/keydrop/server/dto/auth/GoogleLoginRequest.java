@@ -7,7 +7,5 @@ import lombok.Setter;
 @Getter @Setter
 public class GoogleLoginRequest {
   @NotBlank
-  private String code;
-  @NotBlank
-  private String redirectUri;
+  private String credential;
 }

@@ -9,20 +9,16 @@ import java.time.LocalDate;
 @Getter @Setter
 public class LocalSignupRequest {
   @NotBlank
-  private String username;
+  private String email;
   @NotBlank
   private String password;
   @NotBlank
   private String passwordConfirm;
 
   @NotBlank
-  private String email;
-  @NotBlank
   private String nickname;
-
   @NotNull
   private LocalDate birthDate;
-
   @NotBlank
-  private String djLevel;      // beginner/advanced/expert
+  private String djLevel;
 }
