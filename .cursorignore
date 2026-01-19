@@ -1,0 +1,12 @@
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+db_data/
+dist/
+build/
+.next/
+node_modules/
+*.log
+*.svg 
+*.csv
+*.json

@@ -18,7 +18,8 @@ function drawWaveform(
   w: number,
   h: number,
   playhead01: number,
-  variant: 'top' | 'deck'
+  variant: 'top' | 'deck',
+  deckIdx?: 1 | 2
 ) {
   // 중앙선 기준 상/하 대칭 웨이브
   const midY = Math.floor(h / 2);
@@ -51,10 +52,26 @@ function drawWaveform(
     const a = Math.max(0, Math.min(1, sampleAt(x)));
     const amp = Math.floor(a * (h * 0.48));
 
-    // (색 지정 안 좋아하면 CSS 변수로 바꿔도 됨)
-    // 기본: 상단은 초록/파랑 느낌, 덱은 살짝 더 진하게
-    // 여기선 "색 지정"이지만 최소한으로만 해둠
-    ctx.strokeStyle = variant === 'top' ? 'rgba(160, 255, 190, 0.8)' : 'rgba(160, 255, 190, 0.9)';
+    if (amp === 0) continue; // 진폭이 없으면 스킵
+
+    // deckIdx에 따라 기본 색상 설정: deck1은 초록색, deck2는 파란색
+    let baseColor: [number, number, number] = [100, 255, 100]; // 기본 초록색
+    if (deckIdx === 1) {
+      baseColor = [100, 255, 100]; // 초록색
+    } else if (deckIdx === 2) {
+      baseColor = [71, 212, 255]; // 파란색
+    }
+
+    // 수직 그라데이션 생성 (안쪽에서 바깥쪽으로 어두워짐)
+    const gradient = ctx.createLinearGradient(0, midY - amp, 0, midY + amp);
+    const [r, g, b] = baseColor;
+
+    // 중앙(안쪽)은 밝게, 끝(바깥쪽)은 어둡게
+    gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);     // 위쪽 끝 (어둠)
+    gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 1.0)`);   // 중앙 (밝음)
+    gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.4)`);     // 아래쪽 끝 (어둠)
+
+    ctx.strokeStyle = gradient;
 
     ctx.beginPath();
     ctx.moveTo(x + 0.5, midY - amp);
@@ -83,6 +100,12 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
     (deckIdx === 1 ? s.deck1.waveformPeaks : s.deck2.waveformPeaks) ?? null
   );
 
+  // playhead 용 position/duration
+  const deck1Pos = useDJStore((s) => s.deck1.positionSec ?? 0);
+  const deck1Dur = useDJStore((s) => s.deck1.durationSec ?? 0);
+  const deck2Pos = useDJStore((s) => s.deck2.positionSec ?? 0);
+  const deck2Dur = useDJStore((s) => s.deck2.durationSec ?? 0);
+
   const deckState = useDJStore((s) => {
     if (variant !== 'deck') return null;
     if (!deckIdx) return null;
@@ -90,13 +113,22 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
   });
 
   // 플레이헤드 위치(0..1)
-  // 지금 store에 positionSec이 없으니: 우선 isplay일 때 그냥 0으로 두고,
-  // 나중에 Deck.getState().positionSec를 store로 흘려주면 여기서 반영하면 됨.
   const playhead01 = useMemo(() => {
-    if (!deckState?.durationSec || deckState.durationSec <= 0) return 0;
-    // TODO: positionSec store에 넣으면 여기에서 계산
-    return 0;
-  }, [deckState?.durationSec]);
+    const dur = deckState?.durationSec ?? 0;
+    const pos = deckState?.positionSec ?? 0;
+    if (!dur || dur <= 0) return 0;
+    return clamp01(pos / dur);
+  }, [deckState?.durationSec, deckState?.positionSec]);
+
+  const topPlayhead01 = useMemo(() => {
+    if (!deck1Dur || deck1Dur <= 0) return 0;
+    return clamp01(deck1Pos / deck1Dur);
+  }, [deck1Pos, deck1Dur]);
+
+  const bottomPlayhead01 = useMemo(() => {
+    if (!deck2Dur || deck2Dur <= 0) return 0;
+    return clamp01(deck2Pos / deck2Dur);
+  }, [deck2Pos, deck2Dur]);
 
   useEffect(() => {
     const c = canvasRef.current;
@@ -139,14 +171,14 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
       if (topPeak) {
         ctx.save();
         ctx.translate(0, 0);
-        drawWaveform(ctx, topPeak, w, halfH, 0, 'top');
+        drawWaveform(ctx, topPeak, w, halfH, topPlayhead01, 'top', 1);
         ctx.restore();
       }
 
       if (bottomPeak) {
         ctx.save();
         ctx.translate(0, halfH);
-        drawWaveform(ctx, bottomPeak, w, halfH, 0, 'top');
+        drawWaveform(ctx, bottomPeak, w, halfH, bottomPlayhead01, 'top', 2);
         ctx.restore();
       }
       return;
@@ -157,8 +189,8 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
       return;
     }
     ctx.clearRect(0, 0, w, h);
-    drawWaveform(ctx, deckPeaks, w, h, playhead01, 'deck');
-  }, [variant, topPeak, bottomPeak, deckPeaks, playhead01]);
+    drawWaveform(ctx, deckPeaks, w, h, playhead01, 'deck', deckIdx);
+  }, [variant, topPeak, bottomPeak, deckPeaks, playhead01, topPlayhead01, bottomPlayhead01]);
 
   return (
     <div className={`wave wave--${variant}`} aria-hidden="true">

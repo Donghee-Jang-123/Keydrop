@@ -40,8 +40,14 @@
   text-shadow: 0 0 20px rgba(125, 255, 143, 0.35);
 }
 
+.kdTop__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .kdTop__tagline {
-  margin-top: 2px;
+  margin-top: 0;
   font-size: 12px;
   color: var(--muted2);
   letter-spacing: 0.18em;
@@ -53,17 +59,8 @@
   gap: 10px;
 }
 
-.kdTop__kbdPlaceholder {
-  width: 260px;
-  height: 44px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-}
-
 .kdWavePlaceholder {
-  max-width: 1400px;
-  margin: 0 auto 14px;
+  margin: 0 0 14px;
   height: 78px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.55);
@@ -73,33 +70,6 @@
   overflow: hidden;
 }
 
-.kdWavePlaceholder::before {
-  /* 파형 느낌: 얇은 라인들 (실제 파형 데이터는 아님) */
-  content: '';
-  position: absolute;
-  inset: 10px;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(125, 255, 143, 0.25) 0px,
-      rgba(125, 255, 143, 0.25) 2px,
-      transparent 2px,
-      transparent 9px
-    );
-  opacity: 0.35;
-}
-
-.kdWavePlaceholder::after {
-  /* 중앙 플레이헤드 느낌 */
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
-}
 
 .kdTop__liveBtn {
   background: transparent;
@@ -137,8 +107,6 @@
   grid-template-columns: 1fr 400px 1fr;
   gap: 14px;
   align-items: start;
-  max-width: 1600px;
-  margin: 0 auto;
 }
 
 /* Deck panel */
@@ -149,6 +117,8 @@
   box-shadow: var(--shadow);
   overflow: hidden;
   min-height: 435px;
+  display: flex;
+  flex-direction: column;
 }
 
 .deckPanel__header {
@@ -231,11 +201,14 @@
 }
 
 .deckPanel__wavePlaceholder {
-  height: 50px;
-  margin: 0 12px 6px;
+  height: 40px;
+  margin: 10px 8px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  align-items: center;
+  position: relative;
+  justify-content: center;
 }
 
 .deckPanel__body {
@@ -340,8 +313,8 @@
 }
 /* FX 타겟 덱에서 활성 FX가 보이도록 조금 더 강조 */
 .pad--active {
-  border-color: rgb(219, 50, 211);
-  box-shadow: 0 0 22px rgba(255, 104, 197, 0.18);
+  border-color: rgb(255, 104, 197);
+  box-shadow: 0 0 30px rgba(255, 104, 197, 0.5);
 }
 
 .pad.pad--cue {
@@ -383,10 +356,10 @@
     conic-gradient(
       from 135deg,
       transparent 0deg,
-      rgba(255, 255, 255, 0.15) 30deg,
+      rgba(255, 255, 255, 0.25) 30deg,
       transparent 60deg,
       transparent 180deg,
-      rgba(255, 255, 255, 0.15) 210deg,
+      rgba(255, 255, 255, 0.25) 210deg,
       transparent 240deg
     ),
     /* LP 홈 질감 (Repeating Radial) */
@@ -929,16 +902,33 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  /* 두 줄 waveform을 바 안에서 세로로 중앙 정렬 */
+  height: 100%;
+  justify-content: center;
 }
 
 .wave {
   position: relative;
   height: 48px;
   overflow: hidden;
+  /* 캔버스가 바 안에서 정확히 중앙에 오도록 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wave--deck {
+  height: 100%;
 }
 
 .wave--top {
   height: 56px;
+}
+
+.wave__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .wave__bars {
@@ -959,5 +949,5 @@
   bottom: 0;
   left: 50%;
   width: 2px;
-  background: #ff2d55;
+  background: #ffffff;
 }

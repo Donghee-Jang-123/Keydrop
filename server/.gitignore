@@ -39,3 +39,4 @@ out/
 .vscode/
 
 application-local.yml
+.cursorignore
