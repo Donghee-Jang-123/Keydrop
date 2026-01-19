@@ -8,6 +8,7 @@ import MixerPanel from '../components/MixerPanel';
 import LibraryPanel from '../components/LibraryPanel';
 
 export default function DJPlayModePage() {
+  console.log('[PAGE] DJPlayModePage render');
   useInputManager(audioEngine);
 
   const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);

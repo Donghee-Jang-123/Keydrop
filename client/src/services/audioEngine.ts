@@ -1,6 +1,3 @@
-// 친구가 만든 실제 오디오 엔진(client/src/audio/...)을
-// 현재 UI/useInputmanager가 쓰기 좋은 형태로 감싼 어댑터입니다.
-
 import { AudioEngine as CoreEngine } from '../audio/core/AudioEngine';
 import { AudioBus } from '../audio/core/AudioBus';
 import { Deck } from '../audio/deck/Deck';
@@ -129,7 +126,16 @@ class KeydropAudioEngineAdapter {
         void this.ensureGraph().then(() => this.getDeck(1).jumpCue(index as 1 | 2));
       },
       togglePlay: () => {
-        void this.ensureGraph().then(() => this.getDeck(1).toggle());
+        void this.ensureGraph().then(() => {
+          const d = this.getDeck(1);
+
+          if (!d.getBuffer()) return;
+
+          d.toggle();
+
+          const isPlaying = d.getState().isPlaying;
+          useDJStore.getState().actions.setPlayState(1, isPlaying);
+        });
       },
       loadFile: (file: File) => {
         void this.ensureGraph().then(async () => {
@@ -152,6 +158,21 @@ class KeydropAudioEngineAdapter {
           this.activeFx[1] = fx;
         });
       },
+        startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
+          void this.ensureGraph().then(() => {
+            const d = this.getDeck(1);
+
+            console.log('[SCRATCH] start requested (deck1)', {
+              hasBuffer: !!d.getBuffer(),
+              isPlaying: d.getState().isPlaying,
+            });
+
+            d.startScratchHold(opts);
+          });
+        },
+        stopScratchHold: () => {
+          void this.ensureGraph().then(() => this.getDeck(1).stopScratchHold());
+        },
     },
     2: {
       adjustParam: (target: ControlTarget, delta: number) => {
@@ -168,7 +189,16 @@ class KeydropAudioEngineAdapter {
         void this.ensureGraph().then(() => this.getDeck(2).jumpCue(index as 1 | 2));
       },
       togglePlay: () => {
-        void this.ensureGraph().then(() => this.getDeck(2).toggle());
+        void this.ensureGraph().then(() => {
+          const d = this.getDeck(2);
+
+          if (!d.getBuffer()) return;
+
+          d.toggle();
+
+          const isPlaying = d.getState().isPlaying;
+          useDJStore.getState().actions.setPlayState(2, isPlaying);
+        });
       },
       loadFile: (file: File) => {
         void this.ensureGraph().then(async () => {
@@ -189,6 +219,21 @@ class KeydropAudioEngineAdapter {
           this.activeFx[2] = fx;
         });
       },
+        startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
+          void this.ensureGraph().then(() => {
+            const d = this.getDeck(2);
+
+            console.log('[SCRATCH] start requested (deck1)', {
+              hasBuffer: !!d.getBuffer(),
+              isPlaying: d.getState().isPlaying,
+            });
+
+            d.startScratchHold(opts);
+          });
+        },
+        stopScratchHold: () => {
+          void this.ensureGraph().then(() => this.getDeck(2).stopScratchHold());
+        },
     },
   } as const;
 
