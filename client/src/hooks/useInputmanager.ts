@@ -31,8 +31,8 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'SHIFTLEFT': { deck: 1, action: 'LOAD', type: 'TRIGGER' },
 
   // === DECK 2 (오른쪽) ===
-  '8': { deck: 2, action: 'CUE1', type: 'TRIGGER' },
-  '9': { deck: 2, action: 'CUE2', type: 'TRIGGER' },
+  '9': { deck: 2, action: 'CUE1', type: 'TRIGGER' },
+  '0': { deck: 2, action: 'CUE2', type: 'TRIGGER' },
   'P': { deck: 2, action: 'UP', target: 'mid', type: 'HOLD' },
   ';': { deck: 2, action: 'DOWN', target: 'mid', type: 'HOLD' },
   'O': { deck: 2, action: 'UP', target: 'bass', type: 'HOLD' },
@@ -61,11 +61,11 @@ const KEY_MAP: Record<string, KeyCommand> = {
   
 };
 
-// 오디오 엔진 인터페이스 (임시)
 interface AudioEngine {
   decks: {
     [key: number]: {
       adjustParam: (target: ControlTarget, delta: number) => void;
+      setCue: (index: number) => void;
       jumpToCue: (index: number) => void;
       togglePlay: () => void;
       applyFx: (fx: FxType | null) => void;
@@ -82,6 +82,10 @@ interface AudioEngine {
 export const useInputManager = (audioEngine: AudioEngine) => {
   console.log('[IM] hook mounted');
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
+  const cueArmedRef = useRef<{ 1: Set<number>; 2: Set<number> }>({
+    1: new Set(),
+    2: new Set(),
+    });
   const requestRef = useRef<number | null>(null);
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
@@ -228,13 +232,25 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   const executeTriggerAction = (command: KeyCommand) => {
     if (command.deck) {
       if (command.action.startsWith('CUE')) {
-        const idx = parseInt(command.action.replace('CUE', ''));
-        audioEngine.decks[command.deck].jumpToCue(idx);
+        const idx = parseInt(command.action.replace('CUE', '')); // 1 or 2
+        const deck = command.deck;
+
+        const armedSet = cueArmedRef.current[deck];
+        if (!armedSet.has(idx)) {
+            audioEngine.decks[deck].setCue(idx);
+            armedSet.add(idx);
+            console.log(`[CUE] Deck${deck} CUE${idx} set`);
+        } else {
+            audioEngine.decks[deck].jumpToCue(idx);
+            console.log(`[CUE] Deck${deck} CUE${idx} jump`);
+        }
+        return;
       }
       if (command.action === 'PLAY') {
         audioEngine.decks[command.deck].togglePlay();
       }
       if (command.action === 'LOAD') {
+        cueArmedRef.current[command.deck].clear();
         requestLoadSelectedToDeck(command.deck);
       }
     }

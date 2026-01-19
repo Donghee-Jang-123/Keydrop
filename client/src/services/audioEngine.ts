@@ -153,8 +153,11 @@ class KeydropAudioEngineAdapter {
           this.applyDeckParams(1);
         });
       },
+      setCue: (index: number) => {
+        void this.ensureGraph().then(() => this.getDeck(1).setCue(index as 1 | 2));
+      },
       jumpToCue: (index: number) => {
-        void this.ensureGraph().then(() => this.getDeck(1).jumpCue(index as 1 | 2));
+        void this.ensureGraph().then(() => this.getDeck(1).cue(index as 1 | 2));
       },
       togglePlay: () => {
         void this.ensureGraph().then(() => {
@@ -219,8 +222,11 @@ class KeydropAudioEngineAdapter {
           this.applyDeckParams(2);
         });
       },
+      setCue: (index: number) => {
+        void this.ensureGraph().then(() => this.getDeck(2).setCue(index as 1 | 2));
+      },
       jumpToCue: (index: number) => {
-        void this.ensureGraph().then(() => this.getDeck(2).jumpCue(index as 1 | 2));
+        void this.ensureGraph().then(() => this.getDeck(2).cue(index as 1 | 2));
       },
       togglePlay: () => {
         void this.ensureGraph().then(() => {
