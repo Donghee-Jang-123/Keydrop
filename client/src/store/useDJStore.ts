@@ -19,6 +19,7 @@ interface DeckState {
   artist?: string;
   trackBpm?: number;
   durationSec?: number;
+  waveformPeaks?: Float32Array | null;
 }
 
 interface DJState {
@@ -53,6 +54,7 @@ interface DJState {
     setLibraryTracks: (tracks: Music[]) => void;
     selectNextTrack: () => void;
     requestLoadSelectedToDeck: (deckIdx: 1 | 2) => void;
+    setWaveform: (deckIdx: 1 | 2, peaks: Float32Array) => void;
   };
 }
 
@@ -60,11 +62,11 @@ export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
   deck1: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0 
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, waveformPeacks: null,
   },
   deck2: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isplay: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0 
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, waveformPeacks: null,
   },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
@@ -195,7 +197,17 @@ export const useDJStore = create<DJState>((set) => ({
         if (!t) return state;
         return {
           pendingDbLoad: { deckIdx, track: t, nonce: Date.now() }, };
-      }),      
+      }),  
+    setWaveform: (deckIdx, peaks) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            waveformPeaks: peaks,
+          },
+        } as any;
+      }),
   },
 }));
 

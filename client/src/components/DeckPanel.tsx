@@ -1,9 +1,10 @@
 import React from 'react';
 import { useDJStore } from '../store/useDJStore';
+import type { FxType } from '../store/useDJStore';
 import Knob from './Knob';
 import Turntable from './Turntable';
 import EffectPad from './EffectPad';
-import type { FxType } from '../store/useDJStore';
+import WaveformBar from './WaveformBar';
 
 interface DeckMeta {
   title: string;
@@ -21,8 +22,7 @@ interface DeckPanelProps {
 
 const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
   const deck = useDJStore((s) => (deckIdx === 1 ? s.deck1 : s.deck2));
-  const { requestLocalFile } = useDJStore.getState().actions;
-
+  
   // 요청사항: Deck1/Deck2 모두 3x2 버튼(6개)로 통일
   const cue1Key = deckIdx === 1 ? '1' : '8';
   const cue2Key = deckIdx === 1 ? '2' : '9';
@@ -55,13 +55,14 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
         </div>
       </header>
 
+
       <div className="deckPanel__subHeader">
         <div className="deckPanel__time">{meta.time}</div>
         <div className="deckPanel__duration">{meta.duration}</div>
       </div>
 
       {/* 덱 내부 파형 (placeholder) */}
-      <div className="deckPanel__wavePlaceholder" aria-hidden="true" />
+      <WaveformBar deckIdx={deckIdx} variant="deck" />
 
       <div className="deckPanel__body">
         {/* Deck1(왼쪽 덱)은 "패드(왼쪽) - 턴테이블(오른쪽)" 배치 */}
