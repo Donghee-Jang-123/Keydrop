@@ -2,17 +2,28 @@ spring:
   profiles:
     active: local
 
-  jpa:
-    hibernate:
-      ddl-auto: update # 엔티티에 맞춰 테이블을 자동으로 생성/수정
-    show-sql: true
+  sql:
+    init:
+      mode: always
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME} # .env DB_NAME 확인
+    username: ${DB_USER}      # .env DB_USER 확인
+    password: ${DB_PASSWORD} # .env DB_PASSWORD 확인
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    defer-datasource-initialization: true
+
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    
 
 app:
   media:
-    dir: "D:/KeydropMedia"
+    dir: ${MEDIA_PATH}
     urlPrefix: "/media"

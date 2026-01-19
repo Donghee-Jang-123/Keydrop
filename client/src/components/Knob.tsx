@@ -17,13 +17,14 @@ const Knob: React.FC<KnobProps> = ({ deckIdx, knobType, label }) => {
   // 0.0 ~ 1.0 값을 각도(-135도 ~ +135도)로 변환
   const rotation = value * 270 - 135;
   const sweep = value * 270;
+  const isActive = useDJStore((s) => !!s.activeControls?.[`deck${deckIdx}:${knobType}`]);
 
   return (
     <div className="knob-container" style={{ textAlign: 'center' }}>
       <div className="knob-label">{label}</div>
 
       {/* 사진처럼: (1) 값만큼 채워지는 링 + (2) 고정 다이얼 + (3) 회전 포인터 */}
-      <div className="knob">
+      <div className={`knob ${isActive ? 'knob--active' : ''}`}>
         <div
           className="knob-ring"
           style={

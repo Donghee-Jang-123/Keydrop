@@ -86,7 +86,15 @@ export const useInputManager = (audioEngine: AudioEngine) => {
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
   
   // Zustand 액션 가져오기
-  const { updateValue, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck } = useDJStore.getState().actions;
+  const { updateValue, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck, setControlActive } =
+    useDJStore.getState().actions;
+
+  const getControlId = (cmd: KeyCommand): string | null => {
+    if (cmd.type !== 'HOLD') return null;
+    if (cmd.target === 'crossFader') return 'cross';
+    if (cmd.deck && cmd.target) return `deck${cmd.deck}:${cmd.target}`;
+    return null;
+  };
 
   // e.code를 KEY_MAP에서 사용하는 문자열로 정규화
   // 예) KeyG -> "G", Digit1 -> "1", Semicolon -> ";", ShiftLeft -> "SHIFTLEFT"
@@ -140,6 +148,10 @@ export const useInputManager = (audioEngine: AudioEngine) => {
           return;
         }
 
+        // HOLD 컨트롤은 "조작 중" 표시 ON
+        const cid = getControlId(cmd);
+        if (cid) setControlActive(cid, true);
+
         if (cmd.type === 'TRIGGER') executeTriggerAction(cmd);
       }
     }
@@ -161,6 +173,10 @@ export const useInputManager = (audioEngine: AudioEngine) => {
     // FX 키는 keyup에서 OFF 처리
     const cmd = KEY_MAP[keyCode];
     if (!cmd) return;
+
+    // HOLD 컨트롤은 "조작 중" 표시 OFF
+    const cid = getControlId(cmd);
+    if (cid) setControlActive(cid, false);
     if (cmd.action === 'CRUSH' || cmd.action === 'FLANGER' || cmd.action === 'SLICER' || cmd.action === 'KICK') {
       const deckAtKeyDown = activeFxKeyDeck.current.get(keyCode);
       if (!deckAtKeyDown) return;

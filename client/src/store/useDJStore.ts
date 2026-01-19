@@ -38,6 +38,8 @@ interface DJState {
 
   libraryTracks: Music[];
   librarySelectedIndex: number;
+  // 키보드로 "조작 중"인 컨트롤 표시용 (ex: deck1:mid, deck2:fader, cross)
+  activeControls: Record<string, boolean>;
 
   actions: {
     // 통합 업데이트 함수
@@ -55,6 +57,7 @@ interface DJState {
     selectNextTrack: () => void;
     requestLoadSelectedToDeck: (deckIdx: 1 | 2) => void;
     setWaveform: (deckIdx: 1 | 2, peaks: Float32Array) => void;
+    setControlActive: (id: string, active: boolean) => void;
   };
 }
 
@@ -76,6 +79,7 @@ export const useDJStore = create<DJState>((set) => ({
   librarySelectedIndex: 0,
 
   pendingDbLoad: null,
+  activeControls: {},
   
   actions: {
     updateValue: (target, delta, deckIdx) =>
@@ -208,6 +212,14 @@ export const useDJStore = create<DJState>((set) => ({
           },
         } as any;
       }),
+
+    setControlActive: (id, active) =>
+      set((state) => ({
+        activeControls: {
+          ...state.activeControls,
+          [id]: active,
+        },
+      })),
   },
 }));
 

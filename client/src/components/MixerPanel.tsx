@@ -7,6 +7,9 @@ const MixerPanel: React.FC = () => {
   const crossFader = useDJStore((s) => s.crossFader);
   const deck1 = useDJStore((s) => s.deck1);
   const deck2 = useDJStore((s) => s.deck2);
+  const faderActive1 = useDJStore((s) => !!s.activeControls?.['deck1:fader']);
+  const faderActive2 = useDJStore((s) => !!s.activeControls?.['deck2:fader']);
+  const crossActive = useDJStore((s) => !!s.activeControls?.['cross']);
 
   const VFADER_HEIGHT = 240;
   const VFADER_PAD = 15; 
@@ -36,7 +39,7 @@ const MixerPanel: React.FC = () => {
 
         <div className="mixerPanel__faders">
           <div className="mixerPanel__vfader">
-            <div className="mixerPanel__vfaderTrack">
+            <div className={`mixerPanel__vfaderTrack ${faderActive1 ? 'mixerPanel__vfaderTrack--active' : ''}`}>
               <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
               <div
                 className="mixerPanel__vfaderFill mixerPanel__vfaderFill--left"
@@ -47,7 +50,7 @@ const MixerPanel: React.FC = () => {
             </div>
           </div>
           <div className="mixerPanel__vfader">
-            <div className="mixerPanel__vfaderTrack">
+            <div className={`mixerPanel__vfaderTrack ${faderActive2 ? 'mixerPanel__vfaderTrack--active' : ''}`}>
               <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
               <div
                 className="mixerPanel__vfaderFill mixerPanel__vfaderFill--right"
@@ -67,7 +70,7 @@ const MixerPanel: React.FC = () => {
       </div>
 
       <div className="mixerPanel__cross">
-        <div className="mixerPanel__crossTrack">
+        <div className={`mixerPanel__crossTrack ${crossActive ? 'mixerPanel__crossTrack--active' : ''}`}>
           <div className="mixerPanel__crossGradient" aria-hidden="true" />
           <div className="mixerPanel__crossThumb" style={{ left: `${((crossFader + 1) / 2) * 100}%` }} />
         </div>

@@ -9,6 +9,7 @@ import lombok.Getter;
 public class Music {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "music_id")
   private Long musicId;
 
