@@ -62,8 +62,8 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'SPACE': { action: 'BEAT_SYNC', type: 'TRIGGER' },
   'ARROWLEFT': { action: 'LEFT', target: 'crossFader', type: 'HOLD' },
   'ARROWRIGHT': { action: 'RIGHT', target: 'crossFader', type: 'HOLD' },
-  'ARROWUP': { action: 'UP', target: 'bpm', type: 'TRIGGER' },
-  'ARROWDOWN': { action: 'DOWN', target: 'bpm', type: 'TRIGGER' },
+  'ARROWUP': { action: 'UP', target: 'bpm', type: 'HOLD' },
+  'ARROWDOWN': { action: 'DOWN', target: 'bpm', type: 'HOLD' },
 
   'NUMPAD1': { action: 'CRUSH', type: 'TRIGGER' },
   'NUMPAD2': { action: 'FLANGER', type: 'TRIGGER' },
@@ -237,6 +237,26 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
     }
     
     if (!command.target) return;
+
+    if (command.target === 'bpm') {
+      const master = getMasterDeck();
+      if (!master) return;
+
+      const state = audioEngine.peekDeckState(master);
+      if (!state) return;
+
+      const STEP = 0.003;
+      const delta = command.action === 'UP' ? STEP : -STEP;
+
+      const nextRate = Math.max(
+        0.5,
+        Math.min(2.0, state.playbackRate + delta)
+      );
+
+      audioEngine.decks[master].setPlaybackRate(nextRate);
+      return;
+    }
+
     const delta = command.action === 'UP' || command.action === 'RIGHT' ? 0.01 : -0.01;
     if (command.deck) {
       audioEngine.decks[command.deck].adjustParam(command.target, delta);
@@ -290,29 +310,6 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
       toggleFxTargetDeck();
       const next = useDJStore.getState().fxTargetDeck;
       console.log(`[FX] 적용 대상 덱 변경: Deck ${next}`);
-    }
-    // BPM 조정 (MASTER playbackRate 조절)
-    if (command.target === 'bpm') {
-      const master = getMasterDeck();
-      if (!master) return;
-
-      const state = audioEngine.peekDeckState(master);
-      if (!state) return;
-
-      const STEP = 0.005; // ≈ 0.5% (DJ 감각적으로 적당)
-      const delta = command.action === 'UP' ? STEP : -STEP;
-
-      const nextRate = Math.max(
-        0.5,
-        Math.min(2.0, state.playbackRate + delta)
-      );
-
-      audioEngine.decks[master].setPlaybackRate(nextRate);
-
-      console.log(
-        `[BPM] Deck${master} playbackRate →`,
-        nextRate.toFixed(3)
-      );
     }
   };
 
