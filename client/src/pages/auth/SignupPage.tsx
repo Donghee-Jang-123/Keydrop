@@ -57,15 +57,15 @@ export default function SignupPage() {
 
     if (googleMode) {
       try {
-        // SessionStorage에서 토큰 가져오기 (라우터 리다이렉트 방지용)
-        const token = sessionStorage.getItem("pendingSignupToken");
-        if (token) {
-          authStore.setToken(token); // 요청 직전에만 설정
-        }
+        // SessionStorage에서 임시 토큰 가져오기
+        const token = sessionStorage.getItem("pendingSignupToken") || undefined;
 
         // 이미 SignupToken이 있다면(로그인페이지에서 왔거나 등), googleSignupComplete만 호출하면 끝.
         // 이메일은 ReadOnly지만 혹시 모르니 보냄 (서버가 null 체크해서 무시함)
-        const res = await googleSignupComplete({ nickname, birthDate, djLevel, email: email || undefined });
+        const res = await googleSignupComplete(
+          { nickname, birthDate, djLevel, email: email || undefined },
+          { signupToken: token }
+        );
 
         // 성공 시 사용한 임시 토큰 등 정리
         sessionStorage.removeItem("pendingSignupToken");

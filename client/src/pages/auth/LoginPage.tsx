@@ -19,7 +19,9 @@ export default function LoginPage() {
 
       if (res.isNewUser) {
         if (res.signupToken) {
-          authStore.setToken(res.signupToken);
+          // signupToken은 access token이 아니라서 (이후 /api/* 요청에서 깨질 수 있음)
+          // sessionStorage에만 보관하고, 프로필 완료 흐름에서만 사용
+          sessionStorage.setItem("pendingSignupToken", res.signupToken);
         }
         nav("/signup", { state: { isGoogle: true, email: res.email } });
         return;

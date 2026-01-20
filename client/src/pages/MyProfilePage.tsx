@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/authApi";
 
+type Me = {
+  email: string;
+  nickname: string | null;
+};
+
 type RecordingItem = {
   id: number;
   fileName: string;
@@ -28,23 +33,39 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<RecordingItem[]>([]);
+  const [me, setMe] = useState<Me | null>(null);
+  const [meError, setMeError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setError(null);
+      setMeError(null);
 
-        const { data } = await api.get<RecordingItem[]>("/api/recordings");
+      const [meRes, recRes] = await Promise.allSettled([
+        api.get<Me>("/api/users/me"),
+        api.get<RecordingItem[]>("/api/recordings"),
+      ]);
 
-        if (!cancelled) setItems(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error("[MyProfilePage] load failed", e);
-        if (!cancelled) setError("녹음 목록을 불러오지 못했어요.");
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (cancelled) return;
+
+      if (meRes.status === "fulfilled") {
+        setMe(meRes.value?.data ?? null);
+      } else {
+        console.error("[MyProfilePage] me load failed", meRes.reason);
+        setMeError("내 정보를 불러오지 못했어요.");
       }
+
+      if (recRes.status === "fulfilled") {
+        const data = recRes.value?.data;
+        setItems(Array.isArray(data) ? data : []);
+      } else {
+        console.error("[MyProfilePage] recordings load failed", recRes.reason);
+        setError("녹음 목록을 불러오지 못했어요.");
+      }
+
+      setLoading(false);
     })();
 
     return () => {
@@ -74,6 +95,32 @@ export default function MyProfilePage() {
       </header>
 
       <main style={{ padding: 14 }}>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 14,
+            padding: 14,
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ fontWeight: 800, letterSpacing: 0.2 }}>내 정보</div>
+          {meError && <div style={{ marginTop: 10, color: "#ff7a7a" }}>{meError}</div>}
+          {!meError && !me && <div style={{ marginTop: 10, opacity: 0.75 }}>불러오는 중…</div>}
+          {!meError && me && (
+            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ opacity: 0.7, minWidth: 72 }}>Email</div>
+                <div style={{ fontWeight: 700 }}>{me.email || "-"}</div>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ opacity: 0.7, minWidth: 72 }}>Nickname</div>
+                <div style={{ fontWeight: 700 }}>{me.nickname || "닉네임 미설정"}</div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div
           style={{
             background: "rgba(255,255,255,0.06)",
