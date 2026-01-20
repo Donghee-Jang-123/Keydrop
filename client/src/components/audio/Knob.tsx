@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDJStore } from '../store/useDJStore';
+import { useDJStore } from '../../store/useDJStore';
 
 interface KnobProps {
   deckIdx: 1 | 2;

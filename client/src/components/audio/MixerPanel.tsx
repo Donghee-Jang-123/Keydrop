@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDJStore } from '../store/useDJStore';
+import { useDJStore } from '../../store/useDJStore';
 import Knob from './Knob';
 
 type MixerPanelProps = {
