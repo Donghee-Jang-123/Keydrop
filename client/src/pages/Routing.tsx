@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./auth/LoginPage";
 import SignupPage from "./auth/SignupPage";
 import DJPlayModePage from "./DJPlayModePage";
+import MyProfilePage from "./MyProfilePage";
 import { authStore } from "../store/authStore";
 import type { ReactNode } from "react";
 
@@ -34,6 +35,7 @@ export default function Routing() {
       />
 
       <Route path="/dj" element={<DJPlayModePage />} />
+      <Route path="/my-profile" element={<MyProfilePage />} />
     </Routes>
   );
 }

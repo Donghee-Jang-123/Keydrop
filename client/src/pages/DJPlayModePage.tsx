@@ -203,7 +203,12 @@ export default function DJPlayModePage() {
               }
             }}
           />
-          <button className="kdTop__user" type="button" aria-label="User">
+          <button
+            className="kdTop__user"
+            type="button"
+            aria-label="User"
+            onClick={() => nav("/my-profile")}
+          >
             ⦿
           </button>
         </div>
