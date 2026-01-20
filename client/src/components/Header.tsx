@@ -13,9 +13,20 @@ export default function Header() {
                 <Link to="/login" className="auth-link" style={isActive("/login")}>
                     Login
                 </Link>
-                <Link to="/signup" className="auth-link" style={isActive("/signup")}>
-                    Sign up
-                </Link>
+                <div className="nav-tooltip-container">
+                    <Link
+                        to="/signup"
+                        className="auth-link"
+                        style={isActive("/signup")}
+                    >
+                        Sign up
+                    </Link>
+                    {location.pathname !== '/signup' && (
+                        <span className="nav-tooltip-text">
+                            Sign up and unlock{"\n"}the <span style={{ fontWeight: 900 }}>full experience!</span>
+                        </span>
+                    )}
+                </div>
                 <Link to="/live" className="auth-cta-btn">
                     Enter a Live Channel
                 </Link>

@@ -122,9 +122,18 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button type="submit" className="auth-btn-primary" style={{ marginTop: '0px' }}>
-            Login
-          </button>
+          <div className="auth-btn-group">
+            <button type="submit" className="auth-btn-primary">
+              Login
+            </button>
+            <button
+              type="button"
+              className="auth-btn-secondary"
+              onClick={() => nav("/signup")}
+            >
+              Sign up
+            </button>
+          </div>
         </form>
       </div>
     </Layout>
