@@ -22,6 +22,7 @@ interface DeckState {
   positionSec?: number;
   waveformPeaks?: Float32Array | null;
   cues?: { 1?: number; 2?: number };
+  coverUrl?: string | null;
 }
 
 interface DJState {
@@ -51,7 +52,7 @@ interface DJState {
     setFx: (fx: FxType | null, deckIdx?: 1 | 2) => void;
     requestLoadMusicFromDb: (deckIdx: 1 | 2, track: Music) => void;
     clearDbLoadRequest: () => void;
-    setDeckMetaFromDb: (deckIdx: 1 | 2, meta: { title: string; artist: string; bpm: number; durationSec: number }) => void;
+    setDeckMetaFromDb: (deckIdx: 1 | 2, meta: { title: string; artist: string; bpm: number; durationSec: number, coverUrl?: string | null }) => void;
     requestLocalFile: (deckIdx: 1 | 2) => void;
     clearLocalFileRequest: () => void;
     setTrackTitle: (deckIdx: 1 | 2, title: string) => void;
@@ -184,6 +185,7 @@ export const useDJStore = create<DJState>((set) => ({
             trackBpm: meta.bpm,
             durationSec: meta.durationSec,
             positionSec: 0,
+            coverUrl: meta.coverUrl ?? null,
           },
         } as any;
       }),

@@ -64,9 +64,9 @@ export default function DJPlayModePage() {
       try {
         setPlayState(deckIdx, false);
 
-        if (!track.url) throw new Error('track.url is missing');
+        if (!track.mp3Url) throw new Error('track.mp3Url is missing');
 
-        const blob = await fetchMusicBlobByUrl(track.url);
+        const blob = await fetchMusicBlobByUrl(track.mp3Url);
 
         const name = `${track.title ?? 'track'}.mp3`;
         const file = new File([blob], name, { type: blob.type || 'audio/mpeg' });
@@ -77,6 +77,7 @@ export default function DJPlayModePage() {
           artist: track.artists ?? '',
           bpm: track.bpm ?? 0,
           durationSec: track.duration ?? 0,
+          coverUrl: track.imageUrl ?? null,
         });
         setTrackTitle(deckIdx, track.title ?? name);
       } catch (err) {

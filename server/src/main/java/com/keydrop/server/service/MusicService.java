@@ -31,7 +31,8 @@ public class MusicService {
 
   private MusicDto toDto(Music m) {
     // 프론트가 바로 사용할 URL
-    String url = urlPrefix + "/" + m.getFilePath();
+    String mp3Url = urlPrefix + "/" + m.getMp3FilePath();
+    String imageUrl = urlPrefix + "/" + m.getImageFilePath();
     return new MusicDto(
         m.getMusicId(),
         m.getTitle(),
@@ -39,7 +40,8 @@ public class MusicService {
         m.getArtists(),
         m.getGenre(),
         m.getDuration(),
-        url
+        mp3Url,
+        imageUrl
     );
   }
 }

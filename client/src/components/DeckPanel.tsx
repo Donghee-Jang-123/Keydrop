@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDJStore } from '../store/useDJStore';
 import type { FxType } from '../store/useDJStore';
+import { resolveMusicUrl } from '../api/musicApi';
 import Knob from './Knob';
 import Turntable from './Turntable';
 import EffectPad from './EffectPad';
@@ -41,7 +42,18 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
   return (
     <section className={`deckPanel deckPanel--${side}`}>
       <header className="deckPanel__header">
-        <div className="deckPanel__album" aria-hidden="true" />
+        <div className="deckPanel__album" aria-label="Album cover">
+          {deck.coverUrl ? (
+            <img
+              src={resolveMusicUrl(deck.coverUrl)}
+              alt=""
+              className="deckPanel__albumImg"
+              draggable={false}
+            />
+          ) : (
+            <div className="deckPanel__albumPlaceholder" />
+          )}
+        </div>
         <div className="deckPanel__meta">
           <div className="deckPanel__titleRow">
             <div className="deckPanel__title">{deck.trackTitle || meta.title}</div>
