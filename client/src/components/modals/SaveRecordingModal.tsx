@@ -39,7 +39,8 @@ export default function SaveRecordingModal({ onSave, onCancel, isOpen }: SaveRec
                     marginBottom: 20,
                     color: 'white',
                     fontSize: '20px',
-                    fontWeight: 700
+                    fontWeight: 700,
+                    textAlign: 'center'
                 }}>
                     Save Recording
                 </h2>
@@ -49,9 +50,10 @@ export default function SaveRecordingModal({ onSave, onCancel, isOpen }: SaveRec
                         display: 'block',
                         marginBottom: 8,
                         color: '#AAAAAA',
-                        fontSize: '14px'
+                        fontSize: '16px',
+                        fontWeight: 500
                     }}>
-                        Filename
+                        Record name
                     </label>
                     <input
                         type="text"
@@ -60,8 +62,11 @@ export default function SaveRecordingModal({ onSave, onCancel, isOpen }: SaveRec
                         placeholder="My Awesome Mix"
                         autoFocus
                         style={{
-                            width: '100%',
                             padding: '12px',
+                            width: '90%',
+                            maxWidth: '420px',
+                            margin: '0 auto',
+                            display: 'block',
                             borderRadius: '8px',
                             border: '1px solid rgba(255,255,255,0.2)',
                             background: 'rgba(0,0,0,0.2)',
@@ -83,7 +88,7 @@ export default function SaveRecordingModal({ onSave, onCancel, isOpen }: SaveRec
                         style={{
                             padding: '10px 16px',
                             borderRadius: '8px',
-                            border: 'none',
+                            border: '1px solid rgba(255,255,255,0.25)',
                             background: 'transparent',
                             color: '#AAAAAA',
                             cursor: 'pointer',
