@@ -13,8 +13,18 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+
     try {
       const res = await localLogin({ email, password });
+
+      if (res.isNewUser) {
+        if (res.signupToken) {
+          authStore.setToken(res.signupToken);
+        }
+        nav("/signup", { state: { isGoogle: true, email: res.email } });
+        return;
+      }
+
       authStore.setToken(res.accessToken);
       nav("/dj");
     } catch {
@@ -33,12 +43,28 @@ export default function LoginPage() {
             if (!credential) throw new Error("No credential");
 
             const res = await googleLogin({ credential });
-            authStore.setToken(res.accessToken);
 
-            if (res.isNewUser) nav("/signup"); // 추가정보 받는 회원가입 페이지
-            else nav("/dj");
-          } catch {
-            alert("구글 로그인 실패");
+            if (res.isNewUser) {
+              // signupToken 저장 (프로필 완성을 위해 필요) -> authStore 금지(Routing 리다이렉트 방지)
+              if (res.signupToken) {
+                sessionStorage.setItem("pendingSignupToken", res.signupToken);
+              }
+              // 이메일 정보와 함께 이동 (state + sessionStorage 백업)
+              if (res.email) {
+                sessionStorage.setItem("pendingGoogleEmail", res.email);
+              }
+              sessionStorage.setItem("pendingGoogleMode", "true");
+
+              console.log("Navigating to signup with:", { isGoogle: true, email: res.email });
+              nav("/signup", { state: { isGoogle: true, email: res.email } });
+              return;
+            }
+
+            authStore.setToken(res.accessToken);
+            nav("/dj");
+          } catch (err: any) {
+            const msg = err?.response?.data?.error || "구글 로그인 실패";
+            alert(msg);
           }
         }}
         onError={() => alert("구글 로그인 실패")}
@@ -52,14 +78,10 @@ export default function LoginPage() {
         <button type="submit" style={{ padding: 12 }}>
           로그인
         </button>
-      </form>
-
-      <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
-        <button type="button" onClick={() => nav("/signup")}>회원가입</button>
-        <button type="button" onClick={() => alert("아이디/비밀번호 찾기는 다음 단계")}>
-          아이디/비밀번호 찾기
+        <button type="button" onClick={() => nav("/signup")}>
+          회원가입
         </button>
-      </div>
+      </form>
     </div>
   );
 }

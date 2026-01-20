@@ -47,6 +47,7 @@ public class AuthService {
       .password(passwordEncoder.encode(req.getPassword()))
       .nickname(req.getNickname())
       .birthDate(req.getBirthDate())
+      .djLevel(req.getDjLevel())
       .provider("LOCAL")
       .providerId(null)
       .build();
@@ -54,7 +55,10 @@ public class AuthService {
     userRepository.save(user);
 
     String token = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
-    return new AuthTokenResponse(token, false);
+    return AuthTokenResponse.builder()
+        .accessToken(token)
+        .isNewUser(false)
+        .build();
   }
 
   
@@ -72,7 +76,10 @@ public class AuthService {
     }
 
     String token = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
-    return new AuthTokenResponse(token, false);
+    return AuthTokenResponse.builder()
+        .accessToken(token)
+        .isNewUser(false)
+        .build();
   }
 
 
@@ -96,50 +103,115 @@ public class AuthService {
     }
 
     GoogleIdToken.Payload payload = idToken.getPayload();
-    String providerId = payload.getSubject();      // 구글 유저 고유 ID
+    String providerId = payload.getSubject();
     String email = payload.getEmail();
 
-    // 이미 가입된 유저면 찾고, 없으면 생성
     User user = userRepository.findByProviderAndProviderId("GOOGLE", providerId)
-        .orElseGet(() -> {
-          User u = User.builder()
-              .provider("GOOGLE")
-              .providerId(providerId)
-              .email(email)
-              .nickname("user" + providerId.substring(0, 6)) // 임시 닉네임, 나중에 signup에서 수정
-              .build();
-          return userRepository.save(u);
-        });
+        .orElse(null);
 
-    boolean isNewUser = (user.getBirthDate() == null) || (user.getDjLevel() == null); // 기준은 원하는대로
-    String token = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
+    // 신규 유저인 경우 (DB 저장 안 함!)
+    if (user == null) {
+      // 이미 존재하는 이메일인지 확인 (다른 소셜/로컬로 가입된 경우)
+      userRepository.findByEmail(email).ifPresent(u -> {
+        throw new IllegalArgumentException("이미 가입된 이메일입니다 (" + u.getProvider() + ").");
+      });
 
-    return new AuthTokenResponse(token, isNewUser);
+      // User ID 없이, 이메일과 Provider ID만 담은 토큰 발급
+      String preSignupToken = jwtProvider.createPreSignupToken(email, providerId);
+      
+      return AuthTokenResponse.builder()
+          .isNewUser(true)
+          .signupToken(preSignupToken)
+          .email(email)
+          .build();
+    }
+
+    // 기존 유저인 경우 (로그인 처리)
+    boolean profileComplete =
+        user.getNickname() != null &&
+        user.getBirthDate() != null &&
+        user.getDjLevel() != null;
+
+    if (!profileComplete) {
+       // 기존 로직 유지 (혹시 DB에 들어갔는데 미완성인 경우를 위해)
+       String signupToken = jwtProvider.createSignupToken(user.getUserId(), user.getEmail());
+       return AuthTokenResponse.builder()
+           .isNewUser(true)
+           .signupToken(signupToken)
+           .email(user.getEmail())
+           .build();
+    }
+
+    String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
+    return AuthTokenResponse.builder()
+        .isNewUser(false)
+        .accessToken(accessToken)
+        .build();
+  }
+
+  // 구글 회원가입 확정 (Stateless Token 검증 후 DB 저장)
+  @Transactional
+  public AuthTokenResponse registerGoogleUser(String token, CompleteMyProfileRequest req) {
+      io.jsonwebtoken.Claims claims = jwtProvider.getClaimsFromPreSignupToken(token);
+      String email = claims.getSubject();
+      String providerId = claims.get("provider_id", String.class);
+      
+      // 이중 체크
+      if (userRepository.existsByEmail(email)) {
+          throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+      }
+      
+      // 드디어 DB Entity 생성 및 저장
+      User user = User.builder()
+          .email(email)
+          .provider("GOOGLE")
+          .providerId(providerId)
+          .nickname(req.getNickname())
+          .birthDate(req.getBirthDate())
+          .djLevel(req.getDjLevel())
+          .createdAt(java.time.LocalDateTime.now())
+          .build();
+          
+      userRepository.save(user); // <--- 진짜 저장은 이때만!
+
+      String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
+      return AuthTokenResponse.builder()
+          .isNewUser(false)
+          .accessToken(accessToken)
+          .build();
   }
 
   @Transactional
-  public void completeMyProfile(Long userId, CompleteMyProfileRequest req) {
+  public AuthTokenResponse completeMyProfile(Long userId, CompleteMyProfileRequest req) {
+    // ... (Legacy support for existing incomplete users)
+    // 이 메서드는 기존 DB에 있는 유저를 위한 것.
+    // 기존에 이미 userId를 받으므로 그대로 둡니다.
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
-    // 구글 가입자만 “추가정보 입력” 흐름을 타게 하고 싶으면 유지
     if (!"GOOGLE".equals(user.getProvider())) {
       throw new IllegalArgumentException("구글 가입자만 프로필 완료를 진행합니다.");
     }
 
-    // email 중복 체크(원하면)
+    // (기존 로직 유지)
+    String newEmail = user.getEmail();
     if (req.getEmail() != null && !req.getEmail().isBlank()) {
-      boolean emailChanged = (user.getEmail() == null) || !user.getEmail().equals(req.getEmail());
-      if (emailChanged && userRepository.existsByEmail(req.getEmail())) {
-        throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
-      }
+       newEmail = req.getEmail();
     }
 
     user.completeProfile(
-        req.getEmail(),
+        newEmail,
         req.getNickname(),
         req.getBirthDate(),
         req.getDjLevel()
     );
+    // ...
+    userRepository.save(user);
+
+    String accessToken = jwtProvider.createAccessToken(user.getUserId(), user.getEmail());
+    return AuthTokenResponse.builder()
+        .isNewUser(false)
+        .accessToken(accessToken)
+        .build();
   }
 }

@@ -26,7 +26,7 @@ public class User {
   @Column(nullable = false, length = 50)
   private String email;
 
-  @Column(nullable = false, length = 50)
+  @Column(length = 50)
   private String nickname;
 
   @Column(nullable = false, length = 20)
@@ -38,20 +38,13 @@ public class User {
   @Column(length = 255)
   private String password;
 
-  @Column(nullable = false)
   private LocalDate birthDate;
 
-  @Column(nullable = false)
   private String djLevel;
 
   @Column(nullable = false)
-  private LocalDateTime createdAt;
-
-  @PrePersist
-  void prePersist() {
-    if (createdAt == null) createdAt = LocalDateTime.now();
-    if (provider == null) provider = "GOOGLE";
-  }
+  @Builder.Default
+  private LocalDateTime createdAt = LocalDateTime.now();
 
   public void completeProfile(String email, String nickname, LocalDate birthDate, String djLevel) {
     this.email = email;

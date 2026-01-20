@@ -2,6 +2,8 @@ package com.keydrop.server.security;
 
 import java.util.List;
 
+import org.springframework.security.web.header.writers.CrossOriginOpenerPolicyHeaderWriter.CrossOriginOpenerPolicy;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -19,6 +21,7 @@ public class SecurityConfig {
     http
       .csrf(csrf -> csrf.disable())
       .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+      .headers(headers -> headers.crossOriginOpenerPolicy(coop -> coop.policy(CrossOriginOpenerPolicy.UNSAFE_NONE)))
       .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
     return http.build();
   }
@@ -32,7 +35,7 @@ public class SecurityConfig {
     configuration.setAllowCredentials(true);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/auth/**", configuration);
+    source.registerCorsConfiguration("/**", configuration);
     return source;
   }
 }
