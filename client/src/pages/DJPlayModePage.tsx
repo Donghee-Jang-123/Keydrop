@@ -6,10 +6,10 @@ import { fetchMusicBlobByUrl } from '../api/musicApi';
 import { uploadRecording } from '../api/recordingApi';
 import { useNavigate } from 'react-router-dom';
 import { logout } from "../api/authApi";
-import DeckPanel from '../components/DeckPanel';
-import MixerPanel from '../components/MixerPanel';
-import LibraryPanel from '../components/LibraryPanel';
-import WaveformBar from '../components/WaveformBar';
+import DeckPanel from '../components/audio/DeckPanel';
+import MixerPanel from '../components/audio/MixerPanel';
+import LibraryPanel from '../components/audio/LibraryPanel';
+import WaveformBar from '../components/audio/WaveformBar';
 
 function fmtTime(sec: number | undefined) {
   const s = Math.max(0, Math.floor(sec ?? 0));

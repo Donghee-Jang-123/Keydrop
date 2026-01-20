@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { localLogin, googleLogin } from "../../api/authApi";
 import { GoogleLogin } from "@react-oauth/google";
 import { authStore } from "../../store/authStore";
+import Layout from "../../components/Layout";
+import "./Auth.css";
 
 export default function LoginPage() {
   const nav = useNavigate();
@@ -33,55 +35,98 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "60px auto" }}>
-      <h2>Login</h2>
+    <Layout>
+      <div className="auth-card">
+        <h2 className="auth-title">Login</h2>
 
-      <GoogleLogin
-        onSuccess={async (credRes) => {
-          try {
-            const credential = credRes.credential;
-            if (!credential) throw new Error("No credential");
+        <form onSubmit={onSubmit} className="auth-form">
+          <div className="input-group">
+            <input
+              className="auth-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your Email"
+            />
+          </div>
+          <div className="input-group tight">
+            <input
+              className="auth-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your Password"
+              type="password"
+            />
+          </div>
 
-            const res = await googleLogin({ credential });
+          {err && <div style={{ color: "#ff6b6b", fontSize: "14px" }}>{err}</div>}
 
-            if (res.isNewUser) {
-              // signupToken 저장 (프로필 완성을 위해 필요) -> authStore 금지(Routing 리다이렉트 방지)
-              if (res.signupToken) {
-                sessionStorage.setItem("pendingSignupToken", res.signupToken);
-              }
-              // 이메일 정보와 함께 이동 (state + sessionStorage 백업)
-              if (res.email) {
-                sessionStorage.setItem("pendingGoogleEmail", res.email);
-              }
-              sessionStorage.setItem("pendingGoogleMode", "true");
+          {/* Custom Google Button Layout if possible, or just wrapper */}
+          {/* Custom Google Button Layout with Overlay */}
+          <div className="google-btn-wrapper">
+            <div className="google-btn-fake">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Sign in with Google
+            </div>
+            <div className="google-btn-hidden">
+              <GoogleLogin
+                onSuccess={async (credRes) => {
+                  try {
+                    const credential = credRes.credential;
+                    if (!credential) throw new Error("No credential");
 
-              console.log("Navigating to signup with:", { isGoogle: true, email: res.email });
-              nav("/signup", { state: { isGoogle: true, email: res.email } });
-              return;
-            }
+                    const res = await googleLogin({ credential });
 
-            authStore.setToken(res.accessToken);
-            nav("/dj");
-          } catch (err: any) {
-            const msg = err?.response?.data?.error || "구글 로그인 실패";
-            alert(msg);
-          }
-        }}
-        onError={() => alert("구글 로그인 실패")}
-        useOneTap={false}
-      />
+                    if (res.isNewUser) {
+                      if (res.signupToken) {
+                        sessionStorage.setItem("pendingSignupToken", res.signupToken);
+                      }
+                      if (res.email) {
+                        sessionStorage.setItem("pendingGoogleEmail", res.email);
+                      }
+                      sessionStorage.setItem("pendingGoogleMode", "true");
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" />
-        {err && <div style={{ color: "crimson" }}>{err}</div>}
-        <button type="submit" style={{ padding: 12 }}>
-          로그인
-        </button>
-        <button type="button" onClick={() => nav("/signup")}>
-          회원가입
-        </button>
-      </form>
-    </div>
+                      nav("/signup", { state: { isGoogle: true, email: res.email } });
+                      return;
+                    }
+
+                    authStore.setToken(res.accessToken);
+                    nav("/dj");
+                  } catch (err: any) {
+                    const msg = err?.response?.data?.error || "구글 로그인 실패";
+                    alert(msg);
+                  }
+                }}
+                onError={() => alert("구글 로그인 실패")}
+                useOneTap={false}
+                theme="outline"
+                shape="rectangular"
+                width="600"
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="auth-btn-primary" style={{ marginTop: '0px' }}>
+            Login
+          </button>
+        </form>
+      </div>
+    </Layout>
   );
 }

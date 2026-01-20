@@ -1,7 +1,7 @@
 import React from 'react';
-import { useDJStore } from '../store/useDJStore';
-import type { FxType } from '../store/useDJStore';
-import { resolveMusicUrl } from '../api/musicApi';
+import { useDJStore } from '../../store/useDJStore';
+import type { FxType } from '../../store/useDJStore';
+import { resolveMusicUrl } from '../../api/musicApi';
 import Knob from './Knob';
 import Turntable from './Turntable';
 import EffectPad from './EffectPad';
