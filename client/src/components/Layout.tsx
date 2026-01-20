@@ -4,10 +4,10 @@ import "../pages/auth/Auth.css";
 
 interface LayoutProps {
     children: ReactNode;
-    showWave?: boolean;
+    _showWave?: boolean;
 }
 
-export default function Layout({ children, showWave = true }: LayoutProps) {
+export default function Layout({ children, _showWave = true }: LayoutProps) {
     return (
         <div className="auth-layout">
             {/* Background FX Layers */}
