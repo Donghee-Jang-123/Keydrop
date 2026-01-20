@@ -12,6 +12,8 @@ function clamp01(v: number) {
   return Math.max(0, Math.min(1, v));
 }
 
+type CueLabel = { pos01: number; label: string };
+
 function drawWaveform(
   ctx: CanvasRenderingContext2D,
   peaks: Float32Array,
@@ -19,7 +21,9 @@ function drawWaveform(
   h: number,
   playhead01: number,
   variant: 'top' | 'deck',
-  deckIdx?: 1 | 2
+  deckIdx?: 1 | 2,
+  cue01s?: number[],
+  cueLabels?: CueLabel[]
 ) {
   // 중앙선 기준 상/하 대칭 웨이브
   const midY = Math.floor(h / 2);
@@ -79,6 +83,51 @@ function drawWaveform(
     ctx.stroke();
   }
 
+  // CUE 마커(빨간 세로선)
+  if (cue01s && cue01s.length > 0) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 59, 59, 0.9)';
+    ctx.lineWidth = 2;
+    for (const cue01 of cue01s) {
+      const cx = Math.floor(clamp01(cue01) * (w - 1));
+      ctx.beginPath();
+      ctx.moveTo(cx + 0.5, 0);
+      ctx.lineTo(cx + 0.5, h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // CUE 라벨(작은 박스 + 1,2 텍스트)
+  if (cueLabels && cueLabels.length > 0) {
+    ctx.save();
+    ctx.font = '600 10px system-ui, -apple-system, Segoe UI, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
+    const boxH = 14;
+    const boxPadX = 6;
+    const y = 2 + Math.floor(boxH / 2);
+
+    for (const cue of cueLabels) {
+      const cx = Math.floor(clamp01(cue.pos01) * (w - 1));
+      const textW = Math.ceil(ctx.measureText(cue.label).width);
+      const boxW = textW + boxPadX * 2;
+      const halfW = Math.floor(boxW / 2);
+      const left = Math.max(2, Math.min(w - boxW - 2, cx - halfW));
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.lineWidth = 1;
+      ctx.fillRect(left, 2, boxW, boxH);
+      ctx.strokeRect(left + 0.5, 2.5, boxW - 1, boxH - 1);
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+      ctx.fillText(cue.label, left + halfW, y);
+    }
+    ctx.restore();
+  }
+
   // 플레이헤드
   const px = Math.floor(clamp01(playhead01) * (w - 1));
   ctx.strokeStyle = 'rgba(255,255,255,0.9)';
@@ -105,6 +154,8 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
   const deck1Dur = useDJStore((s) => s.deck1.durationSec ?? 0);
   const deck2Pos = useDJStore((s) => s.deck2.positionSec ?? 0);
   const deck2Dur = useDJStore((s) => s.deck2.durationSec ?? 0);
+  const deck1Cues = useDJStore((s) => s.deck1.cues);
+  const deck2Cues = useDJStore((s) => s.deck2.cues);
 
   const deckState = useDJStore((s) => {
     if (variant !== 'deck') return null;
@@ -129,6 +180,61 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
     if (!deck2Dur || deck2Dur <= 0) return 0;
     return clamp01(deck2Pos / deck2Dur);
   }, [deck2Pos, deck2Dur]);
+
+  const topCue01s = useMemo(() => {
+    if (!deck1Dur || deck1Dur <= 0) return [];
+    const c1 = deck1Cues?.[1];
+    const c2 = deck1Cues?.[2];
+    return [c1, c2].filter((v): v is number => typeof v === 'number' && isFinite(v)).map((sec) => clamp01(sec / deck1Dur));
+  }, [deck1Cues, deck1Dur]);
+
+  const bottomCue01s = useMemo(() => {
+    if (!deck2Dur || deck2Dur <= 0) return [];
+    const c1 = deck2Cues?.[1];
+    const c2 = deck2Cues?.[2];
+    return [c1, c2].filter((v): v is number => typeof v === 'number' && isFinite(v)).map((sec) => clamp01(sec / deck2Dur));
+  }, [deck2Cues, deck2Dur]);
+
+  const deckCue01s = useMemo(() => {
+    const dur = deckState?.durationSec ?? 0;
+    if (!dur || dur <= 0) return [];
+    const cues = deckState?.cues ?? {};
+    const c1 = cues?.[1];
+    const c2 = cues?.[2];
+    return [c1, c2].filter((v): v is number => typeof v === 'number' && isFinite(v)).map((sec) => clamp01(sec / dur));
+  }, [deckState?.cues, deckState?.durationSec]);
+
+  const topCueLabels = useMemo<CueLabel[]>(() => {
+    if (!deck1Dur || deck1Dur <= 0) return [];
+    const c1 = deck1Cues?.[1];
+    const c2 = deck1Cues?.[2];
+    const labels: CueLabel[] = [];
+    if (typeof c1 === 'number' && isFinite(c1)) labels.push({ pos01: clamp01(c1 / deck1Dur), label: '1' });
+    if (typeof c2 === 'number' && isFinite(c2)) labels.push({ pos01: clamp01(c2 / deck1Dur), label: '2' });
+    return labels;
+  }, [deck1Cues, deck1Dur]);
+
+  const bottomCueLabels = useMemo<CueLabel[]>(() => {
+    if (!deck2Dur || deck2Dur <= 0) return [];
+    const c1 = deck2Cues?.[1];
+    const c2 = deck2Cues?.[2];
+    const labels: CueLabel[] = [];
+    if (typeof c1 === 'number' && isFinite(c1)) labels.push({ pos01: clamp01(c1 / deck2Dur), label: '1' });
+    if (typeof c2 === 'number' && isFinite(c2)) labels.push({ pos01: clamp01(c2 / deck2Dur), label: '2' });
+    return labels;
+  }, [deck2Cues, deck2Dur]);
+
+  const deckCueLabels = useMemo<CueLabel[]>(() => {
+    const dur = deckState?.durationSec ?? 0;
+    if (!dur || dur <= 0) return [];
+    const cues = deckState?.cues ?? {};
+    const c1 = cues?.[1];
+    const c2 = cues?.[2];
+    const labels: CueLabel[] = [];
+    if (typeof c1 === 'number' && isFinite(c1)) labels.push({ pos01: clamp01(c1 / dur), label: '1' });
+    if (typeof c2 === 'number' && isFinite(c2)) labels.push({ pos01: clamp01(c2 / dur), label: '2' });
+    return labels;
+  }, [deckState?.cues, deckState?.durationSec]);
 
   useEffect(() => {
     const c = canvasRef.current;
@@ -171,14 +277,14 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
       if (topPeak) {
         ctx.save();
         ctx.translate(0, 0);
-        drawWaveform(ctx, topPeak, w, halfH, topPlayhead01, 'top', 1);
+        drawWaveform(ctx, topPeak, w, halfH, topPlayhead01, 'top', 1, topCue01s, topCueLabels);
         ctx.restore();
       }
 
       if (bottomPeak) {
         ctx.save();
         ctx.translate(0, halfH);
-        drawWaveform(ctx, bottomPeak, w, halfH, bottomPlayhead01, 'top', 2);
+        drawWaveform(ctx, bottomPeak, w, halfH, bottomPlayhead01, 'top', 2, bottomCue01s, bottomCueLabels);
         ctx.restore();
       }
       return;
@@ -189,8 +295,23 @@ const WaveformBar: React.FC<WaveformBarProps> = ({ variant = 'top', deckIdx }) =
       return;
     }
     ctx.clearRect(0, 0, w, h);
-    drawWaveform(ctx, deckPeaks, w, h, playhead01, 'deck', deckIdx);
-  }, [variant, topPeak, bottomPeak, deckPeaks, playhead01, topPlayhead01, bottomPlayhead01]);
+    drawWaveform(ctx, deckPeaks, w, h, playhead01, 'deck', deckIdx, deckCue01s, deckCueLabels);
+  }, [
+    variant,
+    topPeak,
+    bottomPeak,
+    deckPeaks,
+    playhead01,
+    topPlayhead01,
+    bottomPlayhead01,
+    topCue01s,
+    bottomCue01s,
+    deckCue01s,
+    topCueLabels,
+    bottomCueLabels,
+    deckCueLabels,
+    deckIdx,
+  ]);
 
   return (
     <div className={`wave wave--${variant}`} aria-hidden="true">

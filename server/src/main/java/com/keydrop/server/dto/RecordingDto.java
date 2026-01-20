@@ -1,0 +1,13 @@
+package com.keydrop.server.dto;
+
+import java.time.LocalDateTime;
+
+public record RecordingDto(
+    long id,
+    String fileName,
+    String contentType,
+    long sizeBytes,
+    LocalDateTime createdAt,
+    String fileUrl
+) {}
+

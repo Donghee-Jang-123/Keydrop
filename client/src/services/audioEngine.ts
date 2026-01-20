@@ -16,6 +16,7 @@ export type PeekDeckState = {
   durationSec: number;
   positionSec: number;
   playbackRate: number;
+  cues: { 1?: number; 2?: number };
 };
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
@@ -72,6 +73,13 @@ class KeydropAudioEngineAdapter {
 
   private initPromise: Promise<void> | null = null;
 
+  // Recording (master output -> MediaRecorder)
+  private recordDest: MediaStreamAudioDestinationNode | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
+  private stopPromise: Promise<Blob> | null = null;
+  private recordingMimeType: string | null = null;
+
   private params: Record<1 | 2, DeckParams> = {
     1: { mid01: 0.5, bass01: 0.5, filter01: 0.5, fader01: 1.0 },
     2: { mid01: 0.5, bass01: 0.5, filter01: 0.5, fader01: 1.0 },
@@ -124,6 +132,81 @@ class KeydropAudioEngineAdapter {
     return this.initPromise;
   }
 
+  private ensureRecordingTap(): void {
+    if (!this.bus) throw new Error('Audio graph not ready');
+    if (this.recordDest) return;
+    this.recordDest = this.engine.ctx.createMediaStreamDestination();
+    // masterGain은 이미 ctx.destination으로 연결되어 있고, 여기로 한 번 더 분기만 함
+    this.bus.masterGain.connect(this.recordDest);
+  }
+
+  private pickRecordingMimeType(): string | null {
+    // 브라우저 지원 순서로 선택
+    const candidates = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/ogg;codecs=opus',
+      'audio/ogg',
+    ];
+    for (const t of candidates) {
+      try {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t;
+      } catch {
+        // ignore
+      }
+    }
+    return null; // 브라우저가 기본 mimeType을 선택하도록
+  }
+
+  public isRecording(): boolean {
+    return this.mediaRecorder?.state === 'recording';
+  }
+
+  public async startRecording(): Promise<void> {
+    await this.ensureGraph();
+    this.ensureRecordingTap();
+
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') return;
+
+    this.recordedChunks = [];
+    this.recordingMimeType = this.pickRecordingMimeType();
+
+    const stream = this.recordDest!.stream;
+    const mr = this.recordingMimeType ? new MediaRecorder(stream, { mimeType: this.recordingMimeType }) : new MediaRecorder(stream);
+    this.mediaRecorder = mr;
+
+    mr.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) this.recordedChunks.push(e.data);
+    };
+
+    this.stopPromise = new Promise<Blob>((resolve, reject) => {
+      mr.onstop = () => {
+        const type = this.recordingMimeType ?? mr.mimeType ?? 'audio/webm';
+        resolve(new Blob(this.recordedChunks, { type }));
+      };
+      mr.onerror = () => reject(new Error('MediaRecorder error'));
+    });
+
+    mr.start();
+  }
+
+  public async stopRecording(): Promise<Blob> {
+    const mr = this.mediaRecorder;
+    const sp = this.stopPromise;
+
+    if (!mr || !sp) throw new Error('Not recording');
+    if (mr.state !== 'recording') return await sp;
+
+    mr.stop();
+
+    try {
+      return await sp;
+    } finally {
+      this.mediaRecorder = null;
+      this.stopPromise = null;
+    }
+  }
+
   private getDeck(deck: 1 | 2): Deck {
     const d = deck === 1 ? this.deck1 : this.deck2;
     if (!d) throw new Error('Audio graph not ready');
@@ -141,6 +224,10 @@ class KeydropAudioEngineAdapter {
       durationSec: s.durationSec,
       positionSec: s.positionSec,
       playbackRate: s.playbackRate ?? 1.0,
+      cues: {
+        1: s.cues?.[1],
+        2: s.cues?.[2],
+      },
     };
   }
 
@@ -407,4 +494,9 @@ export const audioEngine = {
   mixer: adapter.mixerApi,
   peekDeckState: (deckIdx: 1 | 2) => adapter.peekDeckState(deckIdx),
   getAnalyzedBpm: (deckIdx: 1 | 2) => adapter.getAnalyzedBpm(deckIdx),
+  recorder: {
+    isRecording: () => adapter.isRecording(),
+    start: () => adapter.startRecording(),
+    stop: () => adapter.stopRecording(),
+  },
 };
