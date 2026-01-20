@@ -38,3 +38,7 @@ app:
 jwt:
   # 환경 변수 JWT_SECRET을 읽어오고, 없으면 뒤의 기본값을 사용합니다.
   secret: ${JWT_SECRET:KeydropDefaultSecretKeyForJwtAuthentication2026!@#}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
