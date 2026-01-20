@@ -198,12 +198,21 @@ export default function DJPlayModePage() {
 
                 await uploadRecording(file);
               } catch (err) {
+                // 서버 에러 메시지를 가능한 한 노출 (Authorization / 토큰 / 업로드 제한 등)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const msg = (err as any)?.response?.data?.error;
                 console.error('[record] failed', err);
+                if (typeof msg === 'string' && msg.length > 0) alert(msg);
                 setIsRecording(audioEngine.recorder.isRecording());
               }
             }}
           />
-          <button className="kdTop__user" type="button" aria-label="User">
+          <button
+            className="kdTop__user"
+            type="button"
+            aria-label="User"
+            onClick={() => nav("/my-profile")}
+          >
             ⦿
           </button>
         </div>

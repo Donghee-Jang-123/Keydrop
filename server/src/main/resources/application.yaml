@@ -6,6 +6,12 @@ spring:
     init:
       mode: always
 
+  servlet:
+    multipart:
+      # 녹음 파일 업로드가 기본 제한(1MB)에 걸리지 않도록 상향
+      max-file-size: 50MB
+      max-request-size: 50MB
+
   datasource:
     url: jdbc:postgresql://localhost:5432/${DB_NAME} # .env DB_NAME 확인
     username: ${DB_USER}      # .env DB_USER 확인
