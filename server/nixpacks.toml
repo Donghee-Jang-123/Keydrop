@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ["jdk17"]
+
+[phases.build]
+# server 폴더로 이동해서 빌드 진행
+cmds = ["cd server && chmod +x gradlew && ./gradlew clean build -x check -x test -Pproduction"]
+
+[start]
+# 빌드된 jar 파일 실행 (경로 주의)
+cmd = "java -jar server/build/libs/*.jar"
