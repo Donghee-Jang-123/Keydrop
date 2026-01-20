@@ -3,6 +3,8 @@ import { useKeyManager } from '../hooks/useKeyManager';
 import { audioEngine } from '../services/audioEngine';
 import { useDJStore } from '../store/useDJStore';
 import { fetchMusicBlobByUrl } from '../api/musicApi';
+import { useNavigate } from 'react-router-dom';
+import { logout } from "../api/authApi";
 import DeckPanel from '../components/DeckPanel';
 import MixerPanel from '../components/MixerPanel';
 import LibraryPanel from '../components/LibraryPanel';
@@ -16,7 +18,7 @@ function fmtTime(sec: number | undefined) {
 }
 
 export default function DJPlayModePage() {
-  console.log('[PAGE] DJPlayModePage render');
+  const nav = useNavigate();
   useKeyManager(audioEngine);
 
   const pendingDbLoad = useDJStore((s) => s.pendingDbLoad);
@@ -152,6 +154,15 @@ export default function DJPlayModePage() {
             KEY<span className="kdLogo__accent">DROP</span>
           </div>
           <div className="kdTop__tagline">Turn your keyboard into a stage</div>
+          <button
+            type="button"
+            onClick={async () => {
+              await logout();
+              nav("/login");
+            }}
+          >
+            로그아웃
+          </button>
         </div>
 
         <div className="kdTop__right">

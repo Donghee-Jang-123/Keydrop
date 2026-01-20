@@ -11,10 +11,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export type AuthTokenResponse = {
-  accessToken: string;
-  isNewUser: boolean;
-};
+export type AuthTokenResponse =
+  | { isNewUser: false; accessToken: string }
+  | { isNewUser: true; signupToken: string; email?: string };
 
 export type DJLevel = "beginner" | "advanced" | "expert";
 
@@ -49,12 +48,21 @@ export async function localLogin(req: LocalLoginRequest) {
   return data;
 }
 
+export async function logout() {
+  try {
+    await api.post("/auth/logout");
+  } catch {
+  } finally {
+    authStore.clear();
+  }
+}
+
 export async function googleLogin(req: { credential: string }) {
   const { data } = await api.post<AuthTokenResponse>("/auth/login/google", req);
   return data;
 }
 
 export async function googleSignupComplete(body: CompleteMyProfileRequest) {
-  const res = await api.post<void>("/auth/profile/complete", body);
-  return res.data;
+  const { data } = await api.post<{ accessToken: string }>("/auth/profile/complete", body);
+  return data;
 }

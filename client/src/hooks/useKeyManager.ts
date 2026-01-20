@@ -99,7 +99,6 @@ interface AudioEngine {
 }
 
 export const useKeyManager = (audioEngine: AudioEngine) => {
-  console.log('[IM] hook mounted');
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
   const cueArmedRef = useRef<{ 1: Set<number>; 2: Set<number> }>({
     1: new Set(),

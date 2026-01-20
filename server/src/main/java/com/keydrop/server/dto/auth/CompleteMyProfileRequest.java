@@ -2,6 +2,7 @@ package com.keydrop.server.dto.auth;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.time.LocalDate;
 
 @Getter @Setter
 @NoArgsConstructor
