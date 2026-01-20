@@ -6,11 +6,10 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = authStore.getToken();
+  const token = authStore.getAccessToken();
+
   if (token) {
     config.headers = config.headers ?? {};
-    // axios v1: headers can be AxiosHeaders; plain object assignment is OK here
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (config.headers as any).Authorization = `Bearer ${token}`;
   }
   return config;
@@ -28,7 +27,7 @@ api.interceptors.response.use(
       status === 403 ||
       (typeof msg === "string" && (msg.includes("인증 토큰") || msg.includes("Invalid token type") || msg.includes("Authorization is required")))
     ) {
-      authStore.clear();
+      authStore.clearAll();
     }
     return Promise.reject(err);
   }
@@ -76,7 +75,7 @@ export async function logout() {
     await api.post("/auth/logout");
   } catch {
   } finally {
-    authStore.clear();
+    authStore.clearAll();
   }
 }
 
@@ -85,11 +84,20 @@ export async function googleLogin(req: { credential: string }) {
   return data;
 }
 
-export async function googleSignupComplete(
-  body: CompleteMyProfileRequest,
-  opts?: { signupToken?: string }
-) {
-  const headers = opts?.signupToken ? { Authorization: `Bearer ${opts.signupToken}` } : undefined;
-  const { data } = await api.post<{ accessToken: string }>("/auth/profile/complete", body, { headers });
+export async function googleSignupComplete(body: CompleteMyProfileRequest) {
+  const signupToken = authStore.getSignupToken();
+  if (!signupToken) {
+    throw new Error("signupToken missing");
+  }
+  const headers = { Authorization: `Bearer ${signupToken}` };
+
+  const { data } = await api.post<{ accessToken: string }>(
+    "/auth/profile/complete",
+    body,
+    { headers }
+  );
+
+  authStore.setAccessToken(data.accessToken);
+  authStore.setSignupToken("");
   return data;
 }

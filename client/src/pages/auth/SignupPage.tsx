@@ -46,25 +46,17 @@ export default function SignupPage() {
     e.preventDefault();
     setErr(null);
 
-    // ... (logic same as before, essentially) ...
     if (googleMode) {
       try {
-        // SessionStorage에서 임시 토큰 가져오기
-        const token = sessionStorage.getItem("pendingSignupToken") || undefined;
-
-        // 이미 SignupToken이 있다면(로그인페이지에서 왔거나 등), googleSignupComplete만 호출하면 끝.
-        // 이메일은 ReadOnly지만 혹시 모르니 보냄 (서버가 null 체크해서 무시함)
         const res = await googleSignupComplete(
           { nickname, birthDate, djLevel, email: email || undefined },
-          { signupToken: token }
         );
 
-        sessionStorage.removeItem("pendingSignupToken");
         sessionStorage.removeItem("pendingGoogleEmail");
         sessionStorage.removeItem("pendingGoogleMode");
 
-        authStore.setToken(res.accessToken);
-        nav("/dj"); // Redirect to DJ directly? Or Tutorial? Keeping existing logic. existing was /tutorial
+        authStore.setAccessToken(res.accessToken);
+        nav("/dj");
       } catch (err: any) {
         setErr(err?.response?.data?.error || "구글 회원가입 완료에 실패했습니다.");
       }
@@ -82,7 +74,7 @@ export default function SignupPage() {
         setErr("프로필 상태가 올바르지 않습니다. 다시 시도해주세요.");
         return;
       }
-      authStore.setToken(res.accessToken);
+      authStore.setAccessToken(res.accessToken);
       nav("/dj"); // existing was /tutorial
     } catch {
       setErr("회원가입에 실패했습니다. 입력값을 확인해주세요.");
@@ -131,13 +123,13 @@ export default function SignupPage() {
                     if (!credential) throw new Error("no credential");
                     const res = await googleLogin({ credential });
                     if (res.isNewUser) {
-                      if (res.signupToken) sessionStorage.setItem("pendingSignupToken", res.signupToken);
+                      if (res.signupToken) authStore.setSignupToken(res.signupToken);
                       setGoogleMode(true);
                       if (res.email) setEmail(res.email);
                       setErr(null);
                       return;
                     }
-                    authStore.setToken(res.accessToken);
+                    authStore.setAccessToken(res.accessToken);
                     nav("/dj");
                   } catch (err: any) {
                     setErr(err?.response?.data?.error || "구글 로그인 실패");
@@ -201,16 +193,18 @@ export default function SignupPage() {
             <input
               className="auth-input"
               value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              type="text"
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = "text";
+              onChange={(e) => {
+                let v = e.target.value.replace(/[^0-9]/g, "");
+                if (v.length >= 5) v = v.slice(0,4) + "-" + v.slice(4);
+                if (v.length >= 8) v = v.slice(0,7) + "-" + v.slice(7,9);
+                setBirthDate(v.slice(0, 10));
               }}
+              type="text"
               placeholder="YYYY-MM-DD"
+              inputMode="numeric"
+              pattern="\d{4}-\d{2}-\d{2}"
             />
           </div>
-
           <div className="input-group">
             <label className="input-label">DJ Level</label>
             <div className="level-selector">

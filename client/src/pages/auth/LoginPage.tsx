@@ -20,16 +20,12 @@ export default function LoginPage() {
       const res = await localLogin({ email, password });
 
       if (res.isNewUser) {
-        if (res.signupToken) {
-          // signupToken은 access token이 아니라서 (이후 /api/* 요청에서 깨질 수 있음)
-          // sessionStorage에만 보관하고, 프로필 완료 흐름에서만 사용
-          sessionStorage.setItem("pendingSignupToken", res.signupToken);
-        }
-        nav("/signup", { state: { isGoogle: true, email: res.email } });
+        if (res.signupToken) authStore.setSignupToken(res.signupToken);
+        nav("/signup"); 
         return;
       }
 
-      authStore.setToken(res.accessToken);
+      authStore.setAccessToken(res.accessToken);
       nav("/dj");
     } catch {
       setErr("아이디/비밀번호가 일치하지 않습니다.");
@@ -96,18 +92,13 @@ export default function LoginPage() {
                     const res = await googleLogin({ credential });
 
                     if (res.isNewUser) {
-                      if (res.signupToken) {
-                        sessionStorage.setItem("pendingSignupToken", res.signupToken);
-                      }
-                      if (res.email) {
-                        sessionStorage.setItem("pendingGoogleEmail", res.email);
-                      }
+                      if (res.signupToken) authStore.setSignupToken(res.signupToken);
+                      if (res.email) sessionStorage.setItem("pendingGoogleEmail", res.email);
                       sessionStorage.setItem("pendingGoogleMode", "true");
 
                       nav("/signup", { state: { isGoogle: true, email: res.email } });
                       return;
                     }
-
                     authStore.setToken(res.accessToken);
                     nav("/dj");
                   } catch (err: any) {

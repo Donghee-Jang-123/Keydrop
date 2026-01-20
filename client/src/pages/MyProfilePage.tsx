@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api/authApi";
+import { api, logout } from "../api/authApi";
+import profileImg from "../assets/profile.png";
 
 type Me = {
   email: string;
   nickname: string | null;
+  djLevel?: string;
 };
 
 type RecordingItem = {
@@ -13,177 +15,207 @@ type RecordingItem = {
   contentType: string;
   sizeBytes: number;
   createdAt: string;
-  fileUrl: string; // e.g. /api/recordings/{id}/file
+  fileUrl: string;
 };
 
-function fmtBytes(n: number) {
-  if (!Number.isFinite(n) || n <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  let v = n;
-  let i = 0;
-  while (v >= 1024 && i < units.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+function fmtDate(dateStr: string) {
+  const d = new Date(dateStr);
+  // Example: January 20, 2025
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function fmtTime(dateStr: string) {
+  const d = new Date(dateStr);
+  // Example: 2:00
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false });
 }
 
 export default function MyProfilePage() {
   const nav = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<RecordingItem[]>([]);
   const [me, setMe] = useState<Me | null>(null);
-  const [meError, setMeError] = useState<string | null>(null);
+  const [playingId, setPlayingId] = useState<number | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
     (async () => {
-      setLoading(true);
-      setError(null);
-      setMeError(null);
+      try {
+        const [meRes, recRes] = await Promise.allSettled([
+          api.get<Me>("/api/users/me"),
+          api.get<RecordingItem[]>("/api/recordings"),
+        ]);
 
-      const [meRes, recRes] = await Promise.allSettled([
-        api.get<Me>("/api/users/me"),
-        api.get<RecordingItem[]>("/api/recordings"),
-      ]);
-
-      if (cancelled) return;
-
-      if (meRes.status === "fulfilled") {
-        setMe(meRes.value?.data ?? null);
-      } else {
-        console.error("[MyProfilePage] me load failed", meRes.reason);
-        setMeError("내 정보를 불러오지 못했어요.");
+        if (meRes.status === "fulfilled") {
+          setMe(meRes.value.data);
+        }
+        if (recRes.status === "fulfilled") {
+          setItems(Array.isArray(recRes.value.data) ? recRes.value.data : []);
+        }
+      } catch (e) {
+        console.error("Failed to load profile data", e);
       }
-
-      if (recRes.status === "fulfilled") {
-        const data = recRes.value?.data;
-        setItems(Array.isArray(data) ? data : []);
-      } else {
-        console.error("[MyProfilePage] recordings load failed", recRes.reason);
-        setError("녹음 목록을 불러오지 못했어요.");
-      }
-
-      setLoading(false);
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const sorted = useMemo(() => {
     return [...items].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   }, [items]);
 
+  const togglePlay = (id: number) => {
+    const audioEl = document.getElementById(`audio-${id}`) as HTMLAudioElement;
+    if (!audioEl) return;
+
+    if (playingId === id) {
+      audioEl.pause();
+      setPlayingId(null);
+    } else {
+      // Pause currently playing if any
+      if (playingId) {
+        const prev = document.getElementById(`audio-${playingId}`) as HTMLAudioElement;
+        prev?.pause();
+      }
+      audioEl.play().catch(e => console.error("Play failed", e));
+      setPlayingId(id);
+    }
+  };
+
   return (
-    <div className="kd">
-      <header className="kdTop">
-        <div className="kdTop__brand">
-          <div className="kdLogo">
-            KEY<span className="kdLogo__accent">DROP</span>
-          </div>
-          <div className="kdTop__tagline">My recordings</div>
+    <div className="kd" style={{ background: "#2C2C2C", minHeight: "100vh", color: "white", fontFamily: "Inter, sans-serif" }}>
+      {/* Reusing Global Header structure, but we might want a custom one based on design? 
+          The design shows "KeyDROP" top left, "logout" top right. 
+          The provided Header component has integrated navigation which might distract.
+          For now I'll stick to a clean layout matching the image closely. 
+      */}
+      <div style={{ padding: "20px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="kdLogo" style={{ fontSize: 24, fontWeight: 700 }}>
+          KEY<span className="kdLogo__accent" style={{ color: "#4ADE80" }}>DROP</span>
         </div>
-
-        <div className="kdTop__right">
-          <button type="button" className="kdTop__liveBtn" onClick={() => nav("/dj")}>
-            DJ로 돌아가기
-          </button>
-        </div>
-      </header>
-
-      <main style={{ padding: 14 }}>
-        <div
+        <button
+          onClick={async () => {
+            await logout();
+            nav("/login");
+          }}
           style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 14,
-            padding: 14,
-            marginBottom: 12,
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.3)",
+            borderRadius: 20,
+            padding: "8px 24px",
+            color: "white",
+            cursor: "pointer",
+            fontSize: 14
           }}
         >
-          <div style={{ fontWeight: 800, letterSpacing: 0.2 }}>내 정보</div>
-          {meError && <div style={{ marginTop: 10, color: "#ff7a7a" }}>{meError}</div>}
-          {!meError && !me && <div style={{ marginTop: 10, opacity: 0.75 }}>불러오는 중…</div>}
-          {!meError && me && (
-            <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ opacity: 0.7, minWidth: 72 }}>Email</div>
-                <div style={{ fontWeight: 700 }}>{me.email || "-"}</div>
+          logout
+        </button>
+      </div>
+
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px" }}>
+
+        {/* Profile Card */}
+        <div style={{
+          background: "#1E1E1E",
+          borderRadius: 16,
+          padding: 32,
+          display: "flex",
+          gap: 24,
+          alignItems: "center",
+          marginBottom: 32,
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
+        }}>
+          {/* Avatar Section */}
+          <div style={{
+            width: 120,
+            height: 120,
+            borderRadius: 16,
+            overflow: "hidden",
+            background: "#333",
+            flexShrink: 0
+          }}>
+            {/* Placeholder or actual avatar if available. 
+                    Using a generic gradient or user initial if no image.
+                    Design shows an anime avatar. I'll use a placeholder for now. 
+                */}
+            <img
+              src={profileImg}
+              alt="avatar"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          </div>
+
+          {/* User Info */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
+              {me?.nickname || "DJ User"}
+            </h1>
+            <div style={{ color: "#A3A3A3", fontSize: 16 }}>
+              {me?.email || "user@example.com"}
+            </div>
+            <div style={{
+              marginTop: 8,
+              fontSize: 18,
+              color: "#E5E5E5"
+            }}>
+              {me?.djLevel || "Expert"}
+            </div>
+          </div>
+        </div>
+
+        {/* Recordings List */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {sorted.map((item) => (
+            <div key={item.id} style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "16px 0",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+              gap: 20
+            }}>
+              <button
+                onClick={() => togglePlay(item.id)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 4,
+                  background: "rgba(255,255,255,0.1)",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  color: "#fff"
+                }}
+              >
+                {playingId === item.id ? "⏸" : "▶"}
+              </button>
+
+              <div style={{ flex: 1, fontWeight: 500, fontSize: 16 }}>
+                {item.fileName}
               </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ opacity: 0.7, minWidth: 72 }}>Nickname</div>
-                <div style={{ fontWeight: 700 }}>{me.nickname || "닉네임 미설정"}</div>
+
+              <div style={{ color: "#A3A3A3", fontSize: 15 }}>
+                {fmtDate(item.createdAt)}
               </div>
+
+              <div style={{ color: "#A3A3A3", fontSize: 15, width: 60, textAlign: "right" }}>
+                {fmtTime(item.createdAt)}
+              </div>
+
+              {/* Hidden Audio Element */}
+              <audio
+                id={`audio-${item.id}`}
+                src={item.fileUrl}
+                onEnded={() => setPlayingId(null)}
+              />
+            </div>
+          ))}
+
+          {sorted.length === 0 && (
+            <div style={{ padding: 40, textAlign: "center", color: "#666" }}>
+              No recordings yet. Go to DJ mode and mix something!
             </div>
           )}
         </div>
 
-        <div
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 14,
-            padding: 14,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ fontWeight: 800, letterSpacing: 0.2 }}>내 녹음 파일</div>
-            <button type="button" className="kdTop__liveBtn" onClick={() => window.location.reload()}>
-              새로고침
-            </button>
-          </div>
-
-          {loading && <div style={{ marginTop: 12, opacity: 0.75 }}>불러오는 중…</div>}
-          {error && <div style={{ marginTop: 12, color: "#ff7a7a" }}>{error}</div>}
-
-          {!loading && !error && sorted.length === 0 && (
-            <div style={{ marginTop: 12, opacity: 0.75 }}>아직 녹음된 파일이 없어요.</div>
-          )}
-
-          {!loading && !error && sorted.length > 0 && (
-            <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-              {sorted.map((r) => (
-                <div
-                  key={r.id}
-                  style={{
-                    padding: 12,
-                    borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(0,0,0,0.15)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                    <div style={{ fontWeight: 700 }}>{r.fileName}</div>
-                    <div style={{ opacity: 0.75, fontSize: 12 }}>
-                      {r.createdAt ? new Date(r.createdAt).toLocaleString() : ""}
-                      {r.sizeBytes ? ` · ${fmtBytes(r.sizeBytes)}` : ""}
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 10 }}>
-                    <audio controls preload="metadata" src={r.fileUrl} style={{ width: "100%" }} />
-                  </div>
-
-                  <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <a
-                      href={r.fileUrl}
-                      download={r.fileName}
-                      style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}
-                    >
-                      다운로드
-                    </a>
-                    <span style={{ opacity: 0.6, fontSize: 12 }}>{r.contentType}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
-
