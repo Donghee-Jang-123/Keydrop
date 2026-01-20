@@ -48,7 +48,6 @@ export default function DJPlayModePage() {
 
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [pendingRecordingFile, setPendingRecordingFile] = useState<File | null>(null);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!filePickerDeck) return;
@@ -191,8 +190,6 @@ export default function DJPlayModePage() {
       onSaveRecording={async (filename) => {
         if (!pendingRecordingFile) return;
         try {
-          setSaving(true);
-
           // 파일명 확장자 유지
           const ext = pendingRecordingFile.name.split(".").pop() || "webm";
           const safeBase = filename.trim().replace(/[\\/:*?"<>|]/g, "-"); // 윈도우 금지문자 제거
@@ -207,7 +204,6 @@ export default function DJPlayModePage() {
         } catch (e) {
           console.error("upload failed", e);
         } finally {
-          setSaving(false);
         }
       }}
       onToggleRecord={async () => {
