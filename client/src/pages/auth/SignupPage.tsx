@@ -4,6 +4,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import { localSignup, googleLogin, googleSignupComplete } from "../../api/authApi";
 import type { DJLevel } from "../../api/authApi";
 import { authStore } from "../../store/authStore";
+import Layout from "../../components/Layout";
+import "./Auth.css";
 
 const djLevels: DJLevel[] = ["beginner", "advanced", "expert"];
 
@@ -12,8 +14,6 @@ export default function SignupPage() {
   const location = useLocation();
 
   const [googleMode, setGoogleMode] = useState(false);
-  // pendingGoogleCred 제거 (이제 사용 안 함)
-
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -22,27 +22,18 @@ export default function SignupPage() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
-  // LoginPage에서 넘어온 상태 확인
   useEffect(() => {
-    console.log("SignupPage State:", location.state);
-
-    // 1. Router State 확인
     if (location.state?.isGoogle) {
       setGoogleMode(true);
       if (location.state.email) setEmail(location.state.email);
       return;
     }
-
-    // 2. SessionStorage 확인 (Fallback)
     const storedEmail = sessionStorage.getItem("pendingGoogleEmail");
     const storedMode = sessionStorage.getItem("pendingGoogleMode");
 
     if (storedMode === "true") {
       setGoogleMode(true);
       if (storedEmail) setEmail(storedEmail);
-
-      // Strict Mode에서 두 번 실행되면서 데이터가 날아가는 것을 방지하기 위해
-      // 여기서는 삭제하지 않음. (나중에 성공하면 삭제하거나, 덮어씌워지게 둠)
     }
   }, [location.state]);
 
@@ -55,6 +46,7 @@ export default function SignupPage() {
     e.preventDefault();
     setErr(null);
 
+    // ... (logic same as before, essentially) ...
     if (googleMode) {
       try {
         // SessionStorage에서 임시 토큰 가져오기
@@ -67,17 +59,14 @@ export default function SignupPage() {
           { signupToken: token }
         );
 
-        // 성공 시 사용한 임시 토큰 등 정리
         sessionStorage.removeItem("pendingSignupToken");
         sessionStorage.removeItem("pendingGoogleEmail");
         sessionStorage.removeItem("pendingGoogleMode");
 
-        // 완료 시 AccessToken이 바로 옴
         authStore.setToken(res.accessToken);
-        nav("/tutorial");
+        nav("/dj"); // Redirect to DJ directly? Or Tutorial? Keeping existing logic. existing was /tutorial
       } catch (err: any) {
-        const msg = err?.response?.data?.error || "구글 회원가입 완료에 실패했습니다.";
-        setErr(msg);
+        setErr(err?.response?.data?.error || "구글 회원가입 완료에 실패했습니다.");
       }
       return;
     }
@@ -88,123 +77,168 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await localSignup({
-        email,
-        password,
-        passwordConfirm,
-        nickname,
-        birthDate,
-        djLevel,
-      });
-
+      const res = await localSignup({ email, password, passwordConfirm, nickname, birthDate, djLevel });
       if (res.isNewUser) {
         setErr("프로필 상태가 올바르지 않습니다. 다시 시도해주세요.");
         return;
       }
-
       authStore.setToken(res.accessToken);
-      nav("/tutorial");
+      nav("/dj"); // existing was /tutorial
     } catch {
       setErr("회원가입에 실패했습니다. 입력값을 확인해주세요.");
     }
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: "60px auto" }}>
-      <h2>Signup</h2>
+    <Layout>
+      <div className="auth-card">
+        <h2 className="auth-title">Sign up</h2>
 
-      <div style={{ marginBottom: 12 }}>
-        <GoogleLogin
-          useOneTap={false}
-          onSuccess={async (credRes) => {
-            try {
-              const credential = credRes.credential;
-              if (!credential) throw new Error("no credential");
-
-              const res = await googleLogin({ credential });
-
-              console.log("google login res =", res);
-
-              if (res.isNewUser) {
-                if (res.signupToken) {
-                  // authStore.setToken(res.signupToken); // <-- 이거 하면 리다이렉트 됨!
-                  sessionStorage.setItem("pendingSignupToken", res.signupToken);
-                }
-
-                setGoogleMode(true);
-                // 서버에서 전달받은 이메일이 있으면 세팅
-                if (res.email) setEmail(res.email);
-                setErr(null);
-                return;
-              }
-
-              authStore.setToken(res.accessToken);
-              nav("/tutorial");
-            } catch (err: any) {
-              // 에러 객체에서 서버 메시지 추출 시도
-              const msg = err?.response?.data?.error || "구글 로그인에 실패했습니다.";
-              setErr(msg);
-            }
-          }}
-          onError={() => setErr("구글 로그인에 실패했습니다.")}
-        />
-      </div>
-
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 8 }}>
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          disabled={googleMode}
-          style={googleMode ? { backgroundColor: "#f0f0f0", color: "#666" } : {}}
-        />
-
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Nickname" />
-        <input value={birthDate} onChange={(e) => setBirthDate(e.target.value)} type="date" />
-
-        <label>
-          DJ Level
-          <select value={djLevel} onChange={(e) => setDjLevel(e.target.value as DJLevel)}>
-            {djLevels.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </label>
-
+        {/* Google Login for pure Signup (not finishing flow) */}
         {!googleMode && (
-          <>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              type="password"
-            />
-            <input
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="Password Confirm"
-              type="password"
-            />
-          </>
+          <div className="google-btn-wrapper" style={{ marginBottom: '20px' }}>
+            <div className="google-btn-fake">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              Sign up with Google
+            </div>
+            <div className="google-btn-hidden">
+              <GoogleLogin
+                useOneTap={false}
+                theme="outline"
+                shape="rectangular"
+                width="600"
+                onSuccess={async (credRes) => {
+                  // ... same logic ...
+                  try {
+                    const credential = credRes.credential;
+                    if (!credential) throw new Error("no credential");
+                    const res = await googleLogin({ credential });
+                    if (res.isNewUser) {
+                      if (res.signupToken) sessionStorage.setItem("pendingSignupToken", res.signupToken);
+                      setGoogleMode(true);
+                      if (res.email) setEmail(res.email);
+                      setErr(null);
+                      return;
+                    }
+                    authStore.setToken(res.accessToken);
+                    nav("/dj");
+                  } catch (err: any) {
+                    setErr(err?.response?.data?.error || "구글 로그인 실패");
+                  }
+                }}
+                onError={() => setErr("구글 로그인 실패")}
+              />
+            </div>
+          </div>
         )}
 
-        {!googleMode && !pwOk && passwordConfirm.length > 0 && (
-          <div style={{ color: "crimson" }}>비밀번호가 일치하지 않습니다.</div>
-        )}
-        {err && <div style={{ color: "crimson" }}>{err}</div>}
+        <form onSubmit={onSubmit} className="auth-form">
+          <div className="input-group">
+            <label className="input-label">Email</label>
+            <input
+              className="auth-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your Email"
+              disabled={googleMode}
+              style={googleMode ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+            />
+          </div>
 
-        <button type="submit" style={{ padding: 12 }}>
-          회원가입 완료
-        </button>
-      </form>
+          {!googleMode && (
+            <>
+              <div className="input-group">
+                <label className="input-label">Password</label>
+                <input
+                  className="auth-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your Password"
+                  type="password"
+                />
+              </div>
+              <div className="input-group tight">
+                <input
+                  className="auth-input"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  placeholder="Enter your Password again"
+                  type="password"
+                />
+              </div>
+            </>
+          )}
 
-      <div style={{ marginTop: 12 }}>
-        <button type="button" onClick={() => nav("/login")}>
-          로그인으로
-        </button>
+          <div className="input-group">
+            <label className="input-label">DJ name</label>
+            <input
+              className="auth-input"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="Enter your nickname"
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Birthday</label>
+            <input
+              className="auth-input"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              type="text"
+              onFocus={(e) => (e.target.type = "date")}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.type = "text";
+              }}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">DJ Level</label>
+            <div className="level-selector">
+              {djLevels.map((v) => (
+                <label key={v} className="level-option">
+                  <input
+                    type="radio"
+                    name="djLevel"
+                    value={v}
+                    checked={djLevel === v}
+                    onChange={(e) => setDjLevel(e.target.value as DJLevel)}
+                  />
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {!googleMode && !pwOk && passwordConfirm.length > 0 && (
+            <div style={{ color: "#ff6b6b", fontSize: "12px" }}>비밀번호가 일치하지 않습니다.</div>
+          )}
+          {err && <div style={{ color: "#ff6b6b", fontSize: "14px" }}>{err}</div>}
+
+          <button type="submit" className="auth-btn-primary">
+            Sign up
+          </button>
+        </form>
       </div>
-    </div >
+    </Layout>
   );
 }

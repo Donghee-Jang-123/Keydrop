@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import OnboardingPage from "./OnboardingPage";
 import LoginPage from "./auth/LoginPage";
 import SignupPage from "./auth/SignupPage";
 import DJPlayModePage from "./DJPlayModePage";
@@ -14,16 +15,11 @@ function RedirectIfAuthed({ children }: { children: ReactNode }) {
 export default function Routing() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/dj" replace />} />
+      <Route path="/" element={<OnboardingPage />} />
 
-      <Route
-        path="/login"
-        element={
-          <RedirectIfAuthed>
-            <LoginPage />
-          </RedirectIfAuthed>
-        }
-      />
+      <Route path="/login" element={ <RedirectIfAuthed><LoginPage /></RedirectIfAuthed> }/>
+      <Route path="/signup" element={ <RedirectIfAuthed><SignupPage /></RedirectIfAuthed> }/>
+      <Route path="/dj" element={ <DJPlayModePage /> }/>
 
       <Route
         path="/signup"

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useDJStore } from '../store/useDJStore';
+import { useDJStore } from '../../store/useDJStore';
 
 interface WaveformBarProps {
   deckIdx: 1 | 2;

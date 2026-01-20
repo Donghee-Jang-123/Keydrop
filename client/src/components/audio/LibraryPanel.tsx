@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { fetchMusicList } from '../api/musicApi';
-import { useDJStore } from '../store/useDJStore';
+import { fetchMusicList } from '../../api/musicApi';
+import { useDJStore } from '../../store/useDJStore';
 
 const formatTime = (sec: number) => {
   const s = Math.max(0, Math.floor(sec));

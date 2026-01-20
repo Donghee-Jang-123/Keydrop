@@ -1,0 +1,472 @@
+/* Background & Layout */
+.auth-layout {
+  min-height: 100vh;
+  width: 100%;
+  background: url('../../assets/background.png') center/cover no-repeat;
+  position: relative;
+  overflow-x: hidden;
+  color: white;
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+/* Header */
+.auth-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  z-index: 10;
+  position: relative;
+}
+
+.auth-logo {
+  font-size: 32px;
+  font-weight: 800;
+  color: white;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.auth-logo span {
+  color: #7dff8f;
+  /* Green accent */
+}
+
+.auth-nav {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.auth-link {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.auth-link:hover {
+  color: white;
+}
+
+.auth-cta-btn {
+  background: #a32424;
+  /* Dark red */
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.auth-cta-btn:hover {
+  background: #c52b2b;
+  transform: translateY(-1px);
+}
+
+/* Content Area */
+.auth-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  z-index: 10;
+  padding: 20px;
+  position: relative;
+}
+
+/* Auth Card */
+.auth-card {
+  border-radius: 20px;
+  padding: 35px 30px;
+  /* Balanced padding */
+  width: 520px;
+  background: rgba(0, 0, 0, 0.6);
+  /* Remove backdrop-filter if it causes issues, but keeping it is usually fine. */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  transform: translateY(-50px);
+  /* Move UP to prevent scroll and center better */
+}
+
+.auth-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: white;
+  margin-top: 0;
+}
+
+/* Forms */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Restored gap */
+  text-align: left;
+}
+
+/* Specific tight spacing for adjacent inputs (like Password & Confirm) */
+.input-group.tight {
+  margin-top: -6px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Increased gap */
+}
+
+.input-label {
+  font-size: 15px;
+  /* Increased by ~2pt (13px -> 15px) */
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-left: 4px;
+}
+
+.auth-input {
+  background: #111111;
+  /* Solid Dark */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  opacity: 1;
+}
+
+.auth-input:focus {
+  border-color: #68f6ff;
+  box-shadow: 0 0 0 2px rgba(104, 246, 255, 0.1);
+}
+
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  /* Lighter placeholder for readability */
+}
+
+.auth-btn-primary {
+  background: white;
+  color: black;
+  border: none;
+  padding: 14px;
+  /* Slightly reduced */
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  /* text-transform: uppercase; Removed per user request for "Login"(lowercase) */
+  letter-spacing: 0.5px;
+  margin-top: 0;
+  /* Reduced to 0 per user request (relying on form gap) */
+}
+
+/* Button Group for side-by-side buttons */
+.auth-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 0;
+  /* Reduced to 0 per user request */
+  width: 100%;
+}
+
+.auth-btn-group .auth-btn-primary,
+.auth-btn-group .auth-btn-secondary {
+  margin-top: 0;
+  /* Let group handle margin */
+  flex: 1;
+  /* Split width equally */
+}
+
+/* Secondary Button Style (Outline) */
+.auth-btn-secondary {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.auth-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+.auth-btn-primary:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.google-btn-wrapper {
+  position: relative;
+  width: 100%;
+  height: 52px;
+  /* Match input height roughly */
+  margin-top: 10px;
+}
+
+.google-btn-fake {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  color: black;
+  border-radius: 12px;
+  /* Match input radius */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  gap: 10px;
+  cursor: pointer;
+  pointer-events: none;
+  /* Let clicks pass through if z-index is lower, but we put hidden on top */
+  z-index: 1;
+  transition: background 0.2s;
+}
+
+.google-btn-wrapper:hover .google-btn-fake {
+  background: #f0f0f0;
+}
+
+.google-btn-hidden {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.01;
+  z-index: 10;
+  transform: scale(1.1);
+  /* Ensure it covers edges */
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Onboarding Hero */
+.onboarding-hero {
+  text-align: center;
+  max-width: 800px;
+  /* User requested: Raise 5vh higher. Current -10vh -> New -15vh */
+  transform: translateY(-15vh);
+}
+
+.hero-title {
+  font-size: 64px;
+  font-weight: 600;
+  /* Changed to 600 as requested */
+  line-height: 1.1;
+  /* User requested: Buttons down 5vh -> approx 14vh margin */
+  margin-bottom: 14vh;
+}
+
+.hero-title span {
+  color: #7dff8f;
+  /* Green */
+  font-weight: 800;
+  /* Keep keywords bold */
+}
+
+.hero-title .highlight-blue {
+  color: #68f6ff;
+  /* Cyan */
+  font-weight: 800;
+  /* Keep keywords bold */
+}
+
+.hero-actions {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+}
+
+.hero-btn {
+  padding: 18px 40px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  min-width: 240px;
+}
+
+.hero-btn-primary {
+  background: transparent;
+  border-color: #7dff8f;
+  color: white;
+  box-shadow: 0 0 20px rgba(125, 255, 143, 0.1);
+}
+
+.hero-btn-primary:hover {
+  background: rgba(125, 255, 143, 0.1);
+  box-shadow: 0 0 30px rgba(125, 255, 143, 0.3);
+}
+
+.hero-btn-secondary {
+  background: transparent;
+  border-color: #68f6ff;
+  color: white;
+  box-shadow: 0 0 20px rgba(104, 246, 255, 0.1);
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(104, 246, 255, 0.1);
+  box-shadow: 0 0 30px rgba(104, 246, 255, 0.3);
+}
+
+/* Toggle Radio for DJ Level */
+.level-selector {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.level-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.level-option input {
+  accent-color: white;
+}
+
+.level-option:hover {
+  color: white;
+}
+
+/* Tooltip container */
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  /* Position above */
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Navigation Tooltip (Header) */
+.nav-tooltip-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-tooltip-text {
+  visibility: hidden;
+  position: absolute;
+  top: 140%;
+  /* Position below the link */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  color: black;
+  text-align: center;
+  border-radius: 10px;
+  /* Softer corners */
+  padding: 12px 18px;
+  /* More padding */
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 14px;
+  font-weight: 400;
+  /* Normal weight for better contrast */
+  line-height: 1.4;
+  /* Better spacing */
+  white-space: pre-line;
+  /* Allow newlines */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  /* Softer shadow */
+  width: max-content;
+  pointer-events: none;
+}
+
+/* Tooltip Arrow pointing UP */
+.nav-tooltip-text::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent white transparent;
+}
+
+.nav-tooltip-container:hover .nav-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 40px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .auth-card {
+    padding: 30px 20px;
+  }
+
+  .auth-header {
+    padding: 15px 20px;
+  }
+
+  .auth-nav {
+    display: none;
+    /* Simplify for mobile or add burger menu later */
+  }
+}
