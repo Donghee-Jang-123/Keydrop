@@ -261,6 +261,21 @@ class KeydropAudioEngineAdapter {
     d.setFader(p.fader01);
   }
 
+  private liveDest: MediaStreamAudioDestinationNode | null = null;
+
+  private ensureLiveTap(): void {
+    if (!this.bus) throw new Error('Audio graph not ready');
+    if (this.liveDest) return;
+    this.liveDest = this.engine.ctx.createMediaStreamDestination();
+    this.bus.masterGain.connect(this.liveDest);
+  }
+
+  public async getLiveStream(): Promise<MediaStream> {
+    await this.ensureGraph();
+    this.ensureLiveTap();
+    return this.liveDest!.stream;
+  }
+
   public readonly decks = {
     1: {
       adjustParam: (target: ControlTarget, delta: number) => {
@@ -499,4 +514,7 @@ export const audioEngine = {
     start: () => adapter.startRecording(),
     stop: () => adapter.stopRecording(),
   },
+  live: {
+    getStream: () => adapter.getLiveStream(),
+  }
 };

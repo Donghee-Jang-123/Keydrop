@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './index.css';
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import App from "./App";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

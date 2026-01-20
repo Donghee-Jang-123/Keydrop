@@ -4,10 +4,8 @@ import { audioEngine } from '../services/audioEngine';
 import { useDJStore } from '../store/useDJStore';
 import { fetchMusicBlobByUrl } from '../api/musicApi';
 import { uploadRecording } from '../api/recordingApi';
-import { useNavigate } from 'react-router-dom';
-import { logout } from "../api/authApi";
 import LibraryPanel from '../components/audio/LibraryPanel';
-import DJLayout from '../components/DJLayout';
+import DJLayout from '../components/DJHeader';
 
 function fmtTime(sec: number | undefined) {
   const s = Math.max(0, Math.floor(sec ?? 0));
@@ -17,7 +15,6 @@ function fmtTime(sec: number | undefined) {
 }
 
 export default function DJPlayModePage() {
-  const nav = useNavigate();
   useKeyManager(audioEngine);
 
   const pendingDbLoad = useDJStore((s) => s.pendingDbLoad);
@@ -27,7 +24,6 @@ export default function DJPlayModePage() {
     clearLocalFileRequest,
     setTrackTitle,
     setPlayState,
-    toggleFxTargetDeck,
     setDeckMetaFromDb,
     clearDbLoadRequest,
     setPositionSec,
@@ -159,11 +155,6 @@ export default function DJPlayModePage() {
       deck2Meta={deck2Meta}
       masterBpm={masterBpm}
       isRecording={isRecording}
-      onLogout={async () => {
-        await logout();
-        nav("/");
-      }}
-      onToggleLive={toggleFxTargetDeck}
       fileInputRef={fileInputRef}
       onFileChange={async (e) => {
         const deck = pendingDeckRef.current;
