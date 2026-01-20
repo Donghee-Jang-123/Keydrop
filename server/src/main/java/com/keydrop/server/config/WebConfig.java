@@ -22,4 +22,5 @@ public class WebConfig implements WebMvcConfigurer {
         .addResourceLocations(location)
         .setCachePeriod(3600);
   }
+
 }

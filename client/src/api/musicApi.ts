@@ -1,19 +1,27 @@
 import type { Music } from "../types/music";
+import { api } from "./authApi";
 
 export async function fetchMusicList(): Promise<Music[]> {
-  const res = await fetch(`/api/music`);
-  if (!res.ok) throw new Error(`fetchMusicList failed: ${res.status}`);
-  return res.json() as Promise<Music[]>;
+  const { data } = await api.get<Music[]>("/api/music");
+  return data;
+}
+
+function getApiBaseUrl(): string {
+  const base = api.defaults.baseURL ?? import.meta.env.VITE_API_BASE_URL ?? "";
+  return typeof base === "string" ? base.replace(/\/+$/, "") : "";
 }
 
 export function resolveMusicUrl(url: string): string {
   if (url.startsWith("http")) return url;
-  return url;
+  const base = getApiBaseUrl();
+  if (!base) return url;
+
+  if (url.startsWith("/")) return `${base}${url}`;
+  return `${base}/${url}`;
 }
 
 export async function fetchMusicBlobByUrl(url: string): Promise<Blob> {
   const resolved = resolveMusicUrl(url);
-  const res = await fetch(resolved);
-  if (!res.ok) throw new Error(`fetchMusicBlobByUrl failed: ${res.status}`);
-  return await res.blob();
+  const res = await api.get(resolved, { responseType: "blob" });
+  return res.data as Blob;
 }
