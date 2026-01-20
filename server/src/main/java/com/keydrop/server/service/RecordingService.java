@@ -18,8 +18,9 @@ public class RecordingService {
     this.repo = repo;
   }
 
-  public RecordingDto create(MultipartFile file) {
+  public RecordingDto create(MultipartFile file, Long userId) {
     if (file == null || file.isEmpty()) throw new IllegalArgumentException("file is required");
+    if (userId == null) throw new IllegalArgumentException("userId is required");
 
     byte[] bytes;
     try {
@@ -32,6 +33,7 @@ public class RecordingService {
     String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
 
     Recording saved = repo.save(Recording.builder()
+        .userId(userId)
         .fileName(fileName)
         .contentType(contentType)
         .sizeBytes((long) bytes.length)
@@ -41,8 +43,9 @@ public class RecordingService {
     return toDto(saved);
   }
 
-  public List<RecordingDto> list() {
-    return repo.findAll().stream().map(this::toDto).toList();
+  public List<RecordingDto> listByUserId(Long userId) {
+    if (userId == null) throw new IllegalArgumentException("userId is required");
+    return repo.findAllByUserIdOrderByCreatedAtDesc(userId).stream().map(this::toDto).toList();
   }
 
   public RecordingDto get(long id) {

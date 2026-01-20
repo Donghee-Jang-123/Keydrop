@@ -4,6 +4,7 @@ import LoginPage from "./auth/LoginPage";
 import SignupPage from "./auth/SignupPage";
 import DJPlayModePage from "./DJPlayModePage";
 import TutorialModePage from "./TutorialModePage";
+import MyProfilePage from "./MyProfilePage";
 import { authStore } from "../store/authStore";
 import type { ReactNode } from "react";
 
@@ -22,6 +23,17 @@ export default function Routing() {
       <Route path="/dj" element={<DJPlayModePage />} />
       <Route path="/tutorial" element={<TutorialModePage />} />
 
+      <Route
+        path="/signup"
+        element={
+          <RedirectIfAuthed>
+            <SignupPage />
+          </RedirectIfAuthed>
+        }
+      />
+
+      <Route path="/dj" element={<DJPlayModePage />} />
+      <Route path="/my-profile" element={<MyProfilePage />} />
     </Routes>
   );
 }

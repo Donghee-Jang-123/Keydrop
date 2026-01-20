@@ -2,6 +2,8 @@ package com.keydrop.server.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,10 @@ public class Recording {
   @Column(name = "recording_id")
   private Long recordingId;
 
+  // "내 녹음" 필터링용 (권한 체크는 하지 않고, 목록 조회에만 사용)
+  @Column(name = "user_id")
+  private Long userId;
+
   @Column(name = "file_name", nullable = false, length = 255)
   private String fileName;
 
@@ -31,9 +37,10 @@ public class Recording {
   @Builder.Default
   private LocalDateTime createdAt = LocalDateTime.now();
 
-  @Lob
   @Basic(fetch = FetchType.LAZY)
-  @Column(name = "audio_data", nullable = false)
+  // Postgres: bytea 로 저장 (LOB/oid 매핑으로 bigint가 들어가는 문제 방지)
+  @JdbcTypeCode(SqlTypes.VARBINARY)
+  @Column(name = "audio_data", nullable = false, columnDefinition = "bytea")
   private byte[] audioData;
 }
 
