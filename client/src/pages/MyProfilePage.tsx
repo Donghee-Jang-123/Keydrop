@@ -15,19 +15,15 @@ type RecordingItem = {
   contentType: string;
   sizeBytes: number;
   createdAt: string;
+  durationSec?: number;
   fileUrl: string;
 };
 
-function fmtDate(dateStr: string) {
-  const d = new Date(dateStr);
-  // Example: January 20, 2025
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
-function fmtTime(dateStr: string) {
-  const d = new Date(dateStr);
-  // Example: 2:00
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false });
+function fmtDuration(sec: number) {
+  const s = Math.max(0, Math.floor(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
 }
 
 export default function MyProfilePage() {
@@ -80,11 +76,6 @@ export default function MyProfilePage() {
 
   return (
     <div className="kd" style={{ background: "#2C2C2C", minHeight: "100vh", color: "white", fontFamily: "Inter, sans-serif" }}>
-      {/* Reusing Global Header structure, but we might want a custom one based on design? 
-          The design shows "KeyDROP" top left, "logout" top right. 
-          The provided Header component has integrated navigation which might distract.
-          For now I'll stick to a clean layout matching the image closely. 
-      */}
       <div style={{ padding: "20px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div className="kdLogo" style={{ fontSize: 24, fontWeight: 700 }}>
           KEY<span className="kdLogo__accent" style={{ color: "#4ADE80" }}>DROP</span>
@@ -130,10 +121,6 @@ export default function MyProfilePage() {
             background: "#333",
             flexShrink: 0
           }}>
-            {/* Placeholder or actual avatar if available. 
-                    Using a generic gradient or user initial if no image.
-                    Design shows an anime avatar. I'll use a placeholder for now. 
-                */}
             <img
               src={profileImg}
               alt="avatar"
@@ -191,18 +178,22 @@ export default function MyProfilePage() {
                 {item.fileName}
               </div>
 
-              <div style={{ color: "#A3A3A3", fontSize: 15 }}>
-                {fmtDate(item.createdAt)}
-              </div>
-
-              <div style={{ color: "#A3A3A3", fontSize: 15, width: 60, textAlign: "right" }}>
-                {fmtTime(item.createdAt)}
+              <div style={{ width: 60, textAlign: "right" }}>
+                {item.durationSec != null ? fmtDuration(item.durationSec) : "--:--"}
               </div>
 
               {/* Hidden Audio Element */}
               <audio
                 id={`audio-${item.id}`}
                 src={item.fileUrl}
+                preload="metadata"
+                onLoadedMetadata={(e) => {
+                  const dur = (e.currentTarget as HTMLAudioElement).duration;
+                  if (!Number.isFinite(dur)) return;
+                  setItems((prev) =>
+                    prev.map((x) => (x.id === item.id ? { ...x, durationSec: Math.floor(dur) } : x))
+                  );
+                }}
                 onEnded={() => setPlayingId(null)}
               />
             </div>
