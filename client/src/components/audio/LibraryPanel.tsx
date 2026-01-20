@@ -9,7 +9,11 @@ const formatTime = (sec: number) => {
   return `${m}:${String(r).padStart(2, '0')}`;
 };
 
-const LibraryPanel: React.FC = () => {
+interface LibraryPanelProps {
+  fetchOnMount?: boolean;
+}
+
+const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
   const tracks = useDJStore((s) => s.libraryTracks);
   const selectedIndex = useDJStore((s) => s.librarySelectedIndex);
 
@@ -19,6 +23,7 @@ const LibraryPanel: React.FC = () => {
   useEffect(() => {
     let alive = true;
     (async () => {
+      if (!fetchOnMount) return;
       try {
         const list = await fetchMusicList();
         if (!alive) return;
@@ -31,7 +36,7 @@ const LibraryPanel: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [fetchOnMount, setLibraryTracks]);
 
   const genres = useMemo(() => {
     const set = new Set<string>();
@@ -79,32 +84,32 @@ const LibraryPanel: React.FC = () => {
               <div className="library__col library__col--dur">Time</div>
             </div>
 
-          {tracks.map((t, idx) => (
-            <div
-              key={t.musicId}
-              className={`library__row ${idx === selectedIndex ? 'library__row--selected' : ''}`}
-            >
-              <div className="library__col library__col--play">
-                <button
-                  type="button"
-                  onClick={() => requestLoadMusicFromDb(fxTargetDeck, t)}
-                  aria-label={`load ${t.title} to deck ${fxTargetDeck}`}
-                >
-                  ▶
-                </button>
-              </div>
+            {tracks.map((t, idx) => (
+              <div
+                key={t.musicId}
+                className={`library__row ${idx === selectedIndex ? 'library__row--selected' : ''}`}
+              >
+                <div className="library__col library__col--play">
+                  <button
+                    type="button"
+                    onClick={() => requestLoadMusicFromDb(fxTargetDeck, t)}
+                    aria-label={`load ${t.title} to deck ${fxTargetDeck}`}
+                  >
+                    ▶
+                  </button>
+                </div>
 
-              <div className="library__col library__col--title">
-                {t.title} - {t.artists}
+                <div className="library__col library__col--title">
+                  {t.title} - {t.artists}
+                </div>
+                <div className="library__col library__col--bpm">{t.bpm}</div>
+                <div className="library__col library__col--dur">{formatTime(t.duration)}</div>
               </div>
-              <div className="library__col library__col--bpm">{t.bpm}</div>
-              <div className="library__col library__col--dur">{formatTime(t.duration)}</div>
-            </div>
-          ))}
+            ))}
 
           </div>
 
-          
+
         </div>
       </div>
     </section>

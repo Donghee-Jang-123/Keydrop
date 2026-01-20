@@ -70,7 +70,7 @@ const KEY_MAP: Record<string, KeyCommand> = {
   'NUMPAD4': { action: 'SLICER', type: 'TRIGGER' },
   'NUMPAD5': { action: 'KICK', type: 'TRIGGER' },
   'NUMPADENTER': { action: 'FX_TOGGLE_DECK', type: 'TRIGGER' },
-  
+
 };
 
 interface AudioEngine {
@@ -98,15 +98,21 @@ interface AudioEngine {
   } | null;
 }
 
-export const useKeyManager = (audioEngine: AudioEngine) => {
+export const useKeyManager = (audioEngine: AudioEngine, filterPredicate?: (code: string) => boolean) => {
   const activeKeys = useRef<Set<string>>(new Set()); //현재 눌린 키키
   const cueArmedRef = useRef<{ 1: Set<number>; 2: Set<number> }>({
     1: new Set(),
     2: new Set(),
-    });
+  });
   const requestRef = useRef<number | null>(null);
   const activeFxKeyDeck = useRef<Map<string, 1 | 2>>(new Map()); // FX 키를 누르기 시작했을 때의 타겟 덱을 기억
-  
+
+  // Always keep the latest predicate in a ref
+  const filterRef = useRef(filterPredicate);
+  useEffect(() => {
+    filterRef.current = filterPredicate;
+  }, [filterPredicate]);
+
   // Zustand 액션 가져오기
   const { updateValue, toggleFxTargetDeck, setFx, requestLocalFile, selectNextTrack, requestLoadSelectedToDeck, setControlActive } =
     useDJStore.getState().actions;
@@ -123,6 +129,7 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
   const normalizeKeyCode = (e: KeyboardEvent) => {
     if (e.code === 'ShiftLeft') return 'SHIFTLEFT';
     if (e.code === 'ShiftRight') return 'SHIFTRIGHT';
+    if (e.code === 'Space') return 'SPACE'; // Added SPACE explicitly just in case
 
     const code = e.code.toUpperCase();
     if (code.startsWith('KEY')) return code.replace('KEY', '');
@@ -147,10 +154,12 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
       e.target instanceof HTMLInputElement ||
       e.target instanceof HTMLTextAreaElement ||
       (e.target instanceof HTMLElement && e.target.isContentEditable);
-    
+
     const allowWhenTyping = keyCode === 'SHIFTLEFT' || keyCode === 'SHIFTRIGHT' || keyCode === 'TAB';
-    
+
     if (isTyping && !allowWhenTyping) return;
+
+    if (filterRef.current && !filterRef.current(keyCode)) return;
 
     if (KEY_MAP[keyCode]) {
       e.preventDefault();
@@ -185,7 +194,7 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
         if (cmd.type === 'TRIGGER') executeTriggerAction(cmd);
       }
     }
-    
+
   };
 
   const handleKeyUp = (e: KeyboardEvent) => {
@@ -199,7 +208,14 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
       keyCode = 'SHIFTRIGHT';
     }
 
-    activeKeys.current.delete(keyCode); 
+    activeKeys.current.delete(keyCode);
+
+    // allowKeyUp should also check? Usually we want to clear key state anyway, 
+    // but blocking logic should be consistent.
+    // If filter says "Blocked", we probably shouldn't trigger "OFF" actions if they weren't "ON"?
+    // But safely, we can just return.
+    // FIX: Do NOT return early. If we were holding a key and step changed, we MUST run cleanup (stop scratch, setControlActive false).
+    // if (filterRef.current && !filterRef.current(keyCode)) return;
 
     // FX 키는 keyup에서 OFF 처리
     const cmd = KEY_MAP[keyCode];
@@ -251,7 +267,7 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
       });
       return;
     }
-    
+
     if (!command.target) return;
 
     if (command.target === 'bpm') {
@@ -276,14 +292,14 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
     const delta = command.action === 'UP' || command.action === 'RIGHT' ? 0.01 : -0.01;
     if (command.deck) {
       audioEngine.decks[command.deck].adjustParam(command.target, delta);
-      updateValue(command.target, delta, command.deck); 
+      updateValue(command.target, delta, command.deck);
     }
     if (command.target === 'crossFader') {
       audioEngine.mixer.adjustCrossFader(delta);
       updateValue('crossFader', delta);
     }
   };
-  
+
   // TRIGGER 타입의 키를 처리하는 함수
   const executeTriggerAction = (command: KeyCommand) => {
     if (command.deck) {
@@ -293,12 +309,12 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
 
         const armedSet = cueArmedRef.current[deck];
         if (!armedSet.has(idx)) {
-            audioEngine.decks[deck].setCue(idx);
-            armedSet.add(idx);
-            console.log(`[CUE] Deck${deck} CUE${idx} set`);
+          audioEngine.decks[deck].setCue(idx);
+          armedSet.add(idx);
+          console.log(`[CUE] Deck${deck} CUE${idx} set`);
         } else {
-            audioEngine.decks[deck].jumpToCue(idx);
-            console.log(`[CUE] Deck${deck} CUE${idx} jump`);
+          audioEngine.decks[deck].jumpToCue(idx);
+          console.log(`[CUE] Deck${deck} CUE${idx} jump`);
         }
         return;
       }
@@ -335,11 +351,11 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
     window.addEventListener('keyup', handleKeyUp, true);
     requestRef.current = requestAnimationFrame(updateLoop);
 
-  return () => {
-    console.log('[IM] effect cleanup listeners');
-    window.removeEventListener('keydown', handleKeyDown, true);
-    window.removeEventListener('keyup', handleKeyUp, true);
-    if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
-  };
-}, []);
+    return () => {
+      console.log('[IM] effect cleanup listeners');
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
+      if (requestRef.current !== null) cancelAnimationFrame(requestRef.current);
+    };
+  }, []);
 }
