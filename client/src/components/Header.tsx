@@ -23,7 +23,7 @@ export default function Header() {
                     </Link>
                     {location.pathname !== '/signup' && (
                         <span className="nav-tooltip-text">
-                            Sign up and unlock{"\n"}the <span style={{ fontWeight: 900 }}>full experience!</span>
+                            Sign up and unlock{"\n"}the <span style={{ fontWeight: 900 }}>full experience</span>!
                         </span>
                     )}
                 </div>

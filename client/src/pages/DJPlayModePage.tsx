@@ -6,10 +6,8 @@ import { fetchMusicBlobByUrl } from '../api/musicApi';
 import { uploadRecording } from '../api/recordingApi';
 import { useNavigate } from 'react-router-dom';
 import { logout } from "../api/authApi";
-import DeckPanel from '../components/audio/DeckPanel';
-import MixerPanel from '../components/audio/MixerPanel';
 import LibraryPanel from '../components/audio/LibraryPanel';
-import WaveformBar from '../components/audio/WaveformBar';
+import DJLayout from '../components/DJLayout';
 
 function fmtTime(sec: number | undefined) {
   const s = Math.max(0, Math.floor(sec ?? 0));
@@ -129,7 +127,7 @@ export default function DJPlayModePage() {
       setMasterBpm((prev) =>
         Math.abs(prev - bpm) > 0.1 ? bpm : prev
       );
-      
+
     };
 
     const id = setInterval(tick, 100);
@@ -153,110 +151,56 @@ export default function DJPlayModePage() {
   };
 
   return (
-    <div className="kd">
-      <header className="kdTop">
-        <div className="kdTop__brand">
-          <div className="kdLogo">
-            KEY<span className="kdLogo__accent">DROP</span>
-          </div>
-          <div className="kdTop__tagline">Turn your keyboard into a stage</div>
-          <button
-            type="button"
-            onClick={async () => {
-              await logout();
-              nav("/login");
-            }}
-          >
-            로그아웃
-          </button>
-        </div>
-
-        <div className="kdTop__right">
-
-          <button className="kdTop__liveBtn" type="button" onClick={toggleFxTargetDeck}>
-            LIVE
-          </button>
-
-          <button
-            className={`kdTop__recBtn ${isRecording ? 'isRecording' : ''}`}
-            type="button"
-            aria-label="Record"
-            onClick={async () => {
-              try {
-                if (!audioEngine.recorder.isRecording()) {
-                  await audioEngine.recorder.start();
-                  setIsRecording(true);
-                  return;
-                }
-
-                const blob = await audioEngine.recorder.stop();
-                setIsRecording(false);
-
-                const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
-                const name = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
-                const file = new File([blob], name, { type: blob.type || `audio/${ext}` });
-
-                await uploadRecording(file);
-              } catch (err) {
-                // 서버 에러 메시지를 가능한 한 노출 (Authorization / 토큰 / 업로드 제한 등)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const msg = (err as any)?.response?.data?.error;
-                console.error('[record] failed', err);
-                if (typeof msg === 'string' && msg.length > 0) alert(msg);
-                setIsRecording(audioEngine.recorder.isRecording());
-              }
-            }}
-          />
-          <button
-            className="kdTop__user"
-            type="button"
-            aria-label="User"
-            onClick={() => nav("/my-profile")}
-          >
-            ⦿
-          </button>
-        </div>
-      </header>
-
-      <section className="kdWavePlaceholder" aria-label="Waveform">
-        <div className="kdWaveStack">
-          <WaveformBar deckIdx={1} variant="top" />
-        </div>
-      </section>
-
-      <main className="kdMain">
-        <DeckPanel deckIdx={1} side="left" meta={deck1Meta} />
-        <MixerPanel masterBpm={masterBpm}/>
-        <DeckPanel deckIdx={2} side="right" meta={deck2Meta} />
-      </main>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="audio/*,.mp3"
-        style={{ display: 'none' }}
-        onChange={async (e) => {
-          const deck = pendingDeckRef.current;
-          const file = e.target.files?.[0];
-          e.currentTarget.value = '';
-
-          clearLocalFileRequest();
-          pendingDeckRef.current = null;
-          if (!deck || !file) return;
-
-          try {
-            setPlayState(deck, false);
-            setTrackTitle(deck, file.name);
-            audioEngine.decks[deck].loadFile(file, 0);
-          } catch (err) {
-            console.error('[loadFile] failed', err);
+    <DJLayout
+      deck1Meta={deck1Meta}
+      deck2Meta={deck2Meta}
+      masterBpm={masterBpm}
+      isRecording={isRecording}
+      onLogout={async () => {
+        await logout();
+        nav("/login");
+      }}
+      onToggleLive={toggleFxTargetDeck}
+      onToggleRecord={async () => {
+        try {
+          if (!audioEngine.recorder.isRecording()) {
+            await audioEngine.recorder.start();
+            setIsRecording(true);
+            return;
           }
-        }}
-      />
 
-      <section className="kdLibrary" aria-label="Library">
-        <LibraryPanel />
-      </section>
-    </div>
+          const blob = await audioEngine.recorder.stop();
+          setIsRecording(false);
+
+          const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
+          const name = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+          const file = new File([blob], name, { type: blob.type || `audio/${ext}` });
+
+          await uploadRecording(file);
+        } catch (err) {
+          console.error('[record] failed', err);
+          setIsRecording(audioEngine.recorder.isRecording());
+        }
+      }}
+      fileInputRef={fileInputRef}
+      onFileChange={async (e) => {
+        const deck = pendingDeckRef.current;
+        const file = e.target.files?.[0];
+        e.currentTarget.value = '';
+
+        clearLocalFileRequest();
+        pendingDeckRef.current = null;
+        if (!deck || !file) return;
+
+        try {
+          setPlayState(deck, false);
+          setTrackTitle(deck, file.name);
+          audioEngine.decks[deck].loadFile(file, 0);
+        } catch (err) {
+          console.error('[loadFile] failed', err);
+        }
+      }}
+      libraryElement={<LibraryPanel />}
+    />
   );
 }
