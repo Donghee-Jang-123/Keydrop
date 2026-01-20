@@ -26,6 +26,15 @@ function fmtDuration(sec: number) {
   return `${m}:${String(r).padStart(2, "0")}`;
 }
 
+function fmtDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function MyProfilePage() {
   const nav = useNavigate();
   const [items, setItems] = useState<RecordingItem[]>([]);
@@ -178,8 +187,19 @@ export default function MyProfilePage() {
                 {item.fileName}
               </div>
 
-              <div style={{ width: 60, textAlign: "right" }}>
-                {item.durationSec != null ? fmtDuration(item.durationSec) : "--:--"}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                color: "#A3A3A3"
+              }}>
+                <div style={{ minWidth: 60, textAlign: "right" }}>
+                  {item.durationSec != null ? fmtDuration(item.durationSec) : "--:--"}
+                </div>
+
+                <div style={{ minWidth: 160, textAlign: "right" }}>
+                  {fmtDate(item.createdAt)}
+                </div>
               </div>
 
               {/* Hidden Audio Element */}
