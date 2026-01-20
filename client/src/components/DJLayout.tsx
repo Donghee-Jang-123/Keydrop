@@ -1,8 +1,12 @@
 
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authStore } from '../store/authStore';
 import WaveformBar from '../components/audio/WaveformBar';
 import DeckPanel from '../components/audio/DeckPanel';
 import MixerPanel from '../components/audio/MixerPanel';
+import SaveRecordingModal from './modals/SaveRecordingModal';
+import profileImg from '../assets/profile.png';
 
 interface DJLayoutProps {
     deck1Meta: {
@@ -28,6 +32,10 @@ interface DJLayoutProps {
     onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     libraryElement: ReactNode;
     headerExtra?: ReactNode;
+
+    showSaveModal?: boolean;
+    onCloseSaveModal?: () => void;
+    onSaveRecording?: (filename: string) => void;
 }
 
 const DJLayout: React.FC<DJLayoutProps> = ({
@@ -42,7 +50,19 @@ const DJLayout: React.FC<DJLayoutProps> = ({
     onFileChange,
     libraryElement,
     headerExtra,
+    showSaveModal,
+    onCloseSaveModal,
+    onSaveRecording,
 }) => {
+    const nav = useNavigate();
+    const [isAuthed, setIsAuthed] = useState(authStore.isAuthed());
+    const [showTooltip, setShowTooltip] = useState(false);
+
+    useEffect(() => {
+        // Simple check on mount, could sub to store if it had listeners
+        setIsAuthed(authStore.isAuthed());
+    }, []);
+
     return (
         <div className="kd">
             <header className="kdTop">
@@ -68,9 +88,45 @@ const DJLayout: React.FC<DJLayoutProps> = ({
                         aria-label="Record"
                         onClick={onToggleRecord}
                     />
-                    <button className="kdTop__user" type="button" aria-label="User">
-                        ⦿
-                    </button>
+
+                    {/* Profile Icon with Tooltip */}
+                    <div
+                        onClick={() => nav(isAuthed ? "/profile" : "/login")}
+                        style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                    >
+                        <button className="kdTop__user" type="button" aria-label="User" style={{ pointerEvents: 'none' }}>
+                            {/* Simple Avatar or Icon */}
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+                                <img
+                                    src={profileImg}
+                                    alt="avatar"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            </div>
+                        </button>
+
+                        {!isAuthed && showTooltip && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                marginTop: 8,
+                                background: '#1E1E1E',
+                                color: '#eee',
+                                padding: '6px 12px',
+                                borderRadius: 6,
+                                fontSize: 12,
+                                whiteSpace: 'nowrap',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                zIndex: 100
+                            }}>
+                                Please login
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -103,6 +159,12 @@ const DJLayout: React.FC<DJLayoutProps> = ({
             <section className="kdLibrary" aria-label="Library" id="library-container">
                 {libraryElement}
             </section>
+
+            <SaveRecordingModal
+                isOpen={!!showSaveModal}
+                onCancel={() => onCloseSaveModal?.()}
+                onSave={(filename) => onSaveRecording?.(filename)}
+            />
         </div>
     );
 };

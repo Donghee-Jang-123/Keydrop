@@ -22,18 +22,7 @@ export default function Routing() {
       <Route path="/signup" element={<RedirectIfAuthed><SignupPage /></RedirectIfAuthed>} />
       <Route path="/dj" element={<DJPlayModePage />} />
       <Route path="/tutorial" element={<TutorialModePage />} />
-
-      <Route
-        path="/signup"
-        element={
-          <RedirectIfAuthed>
-            <SignupPage />
-          </RedirectIfAuthed>
-        }
-      />
-
-      <Route path="/dj" element={<DJPlayModePage />} />
-      <Route path="/my-profile" element={<MyProfilePage />} />
+      <Route path="/profile" element={<MyProfilePage />} />
     </Routes>
   );
 }

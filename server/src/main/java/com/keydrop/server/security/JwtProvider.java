@@ -93,6 +93,10 @@ public class JwtProvider {
       throw new IllegalArgumentException("Invalid token type");
     }
 
-    return Long.parseLong(claims.getSubject());
+    try {
+      return Long.parseLong(claims.getSubject());
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid user ID in token");
+    }
   }
 }

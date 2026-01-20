@@ -21,4 +21,3 @@ export async function uploadRecording(file: File): Promise<RecordingUploadRespon
 
   return data;
 }
-

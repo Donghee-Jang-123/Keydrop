@@ -470,6 +470,9 @@ export default function TutorialModePage() {
                         Skip Tutorial Mode
                     </button>
                 }
+                showSaveModal={false}
+                onCloseSaveModal={() => { }}
+                onSaveRecording={() => { }}
             />
         </>
     );

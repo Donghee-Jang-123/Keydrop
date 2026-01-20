@@ -1,16 +1,31 @@
-const KEY = "accessToken";
+const ACCESS_KEY = "accessToken";
+const SIGNUP_KEY = "signupToken";
 
 export const authStore = {
-  getToken(): string | null {
-    return localStorage.getItem(KEY);
+  getAccessToken() {
+    return localStorage.getItem(ACCESS_KEY);
+  },
+  setAccessToken(token: string) {
+    localStorage.setItem(ACCESS_KEY, token);
+  },
+  getSignupToken() {
+    return localStorage.getItem(SIGNUP_KEY);
+  },
+  setSignupToken(token: string) {
+    if (!token) localStorage.removeItem(SIGNUP_KEY);
+    else localStorage.setItem(SIGNUP_KEY, token);
   },
   isAuthed(): boolean {
-    return !!localStorage.getItem(KEY);
+    return !!localStorage.getItem(ACCESS_KEY);
+  },
+  clearAll() {
+    localStorage.removeItem(ACCESS_KEY);
+    localStorage.removeItem(SIGNUP_KEY);
   },
   setToken(token: string) {
-    localStorage.setItem(KEY, token);
+    this.setAccessToken(token);
   },
   clear() {
-    localStorage.removeItem(KEY);
-  },
+    this.clearAll();
+  }
 };

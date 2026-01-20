@@ -46,6 +46,10 @@ export default function DJPlayModePage() {
   const [masterBpm, setMasterBpm] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
 
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [pendingRecordingFile, setPendingRecordingFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     if (!filePickerDeck) return;
     pendingDeckRef.current = filePickerDeck;
@@ -158,9 +162,54 @@ export default function DJPlayModePage() {
       isRecording={isRecording}
       onLogout={async () => {
         await logout();
-        nav("/login");
+        nav("/");
       }}
       onToggleLive={toggleFxTargetDeck}
+      fileInputRef={fileInputRef}
+      onFileChange={async (e) => {
+        const deck = pendingDeckRef.current;
+        const file = e.target.files?.[0];
+        e.currentTarget.value = "";
+
+        clearLocalFileRequest();
+        pendingDeckRef.current = null;
+        if (!deck || !file) return;
+
+        try {
+          setPlayState(deck, false);
+          setTrackTitle(deck, file.name);
+          audioEngine.decks[deck].loadFile(file, 0);
+        } catch (err) {
+          console.error("[loadFile] failed", err);
+        }
+      }}
+      showSaveModal={showSaveModal}
+      onCloseSaveModal={() => {
+        setShowSaveModal(false);
+        setPendingRecordingFile(null);
+      }}
+      onSaveRecording={async (filename) => {
+        if (!pendingRecordingFile) return;
+        try {
+          setSaving(true);
+
+          // 파일명 확장자 유지
+          const ext = pendingRecordingFile.name.split(".").pop() || "webm";
+          const safeBase = filename.trim().replace(/[\\/:*?"<>|]/g, "-"); // 윈도우 금지문자 제거
+          const finalName = safeBase.endsWith(`.${ext}`) ? safeBase : `${safeBase}.${ext}`;
+
+          const finalFile = new File([pendingRecordingFile], finalName, { type: pendingRecordingFile.type });
+
+          await uploadRecording(finalFile);
+
+          setShowSaveModal(false);
+          setPendingRecordingFile(null);
+        } catch (e) {
+          console.error("upload failed", e);
+        } finally {
+          setSaving(false);
+        }
+      }}
       onToggleRecord={async () => {
         try {
           if (!audioEngine.recorder.isRecording()) {
@@ -172,32 +221,15 @@ export default function DJPlayModePage() {
           const blob = await audioEngine.recorder.stop();
           setIsRecording(false);
 
-          const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
-          const name = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
-          const file = new File([blob], name, { type: blob.type || `audio/${ext}` });
+          const ext = blob.type.includes("ogg") ? "ogg" : "webm";
+          const tmpName = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
+          const file = new File([blob], tmpName, { type: blob.type || `audio/${ext}` });
 
-          await uploadRecording(file);
+          setPendingRecordingFile(file);
+          setShowSaveModal(true);
         } catch (err) {
-          console.error('[record] failed', err);
+          console.error("[record] failed", err);
           setIsRecording(audioEngine.recorder.isRecording());
-        }
-      }}
-      fileInputRef={fileInputRef}
-      onFileChange={async (e) => {
-        const deck = pendingDeckRef.current;
-        const file = e.target.files?.[0];
-        e.currentTarget.value = '';
-
-        clearLocalFileRequest();
-        pendingDeckRef.current = null;
-        if (!deck || !file) return;
-
-        try {
-          setPlayState(deck, false);
-          setTrackTitle(deck, file.name);
-          audioEngine.decks[deck].loadFile(file, 0);
-        } catch (err) {
-          console.error('[loadFile] failed', err);
         }
       }}
       libraryElement={<LibraryPanel />}
