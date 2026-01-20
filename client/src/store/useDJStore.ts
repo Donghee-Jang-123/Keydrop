@@ -21,6 +21,7 @@ interface DeckState {
   durationSec?: number;
   positionSec?: number;
   waveformPeaks?: Float32Array | null;
+  cues?: { 1?: number; 2?: number };
 }
 
 interface DJState {
@@ -61,6 +62,7 @@ interface DJState {
     setControlActive: (id: string, active: boolean) => void;
     setPositionSec: (deckIdx: 1 | 2, positionSec: number) => void;
     setDurationSec: (deckIdx: 1 | 2, durationSec: number) => void;
+    setCues: (deckIdx: 1 | 2, cues: { 1?: number; 2?: number }) => void;
   };
 }
 
@@ -68,11 +70,11 @@ export const useDJStore = create<DJState>((set) => ({
   // 초기 상태 설정
   deck1: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isPlaying: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null, cues: {},
   },
   deck2: { 
     mid: 0.5, bass: 0.5, filter: 0.5, fader: 1.0, isPlaying: false, fx: null, 
-    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null,
+    trackTitle: '', artist: '', trackBpm: 0, durationSec: 0, positionSec: 0, waveformPeaks: null, cues: {},
   },
   crossFader: 0.0, // -1.0(왼쪽) ~ 1.0(오른쪽)
   bpm: 120.0,
@@ -243,6 +245,17 @@ export const useDJStore = create<DJState>((set) => ({
           [deckKey]: {
             ...state[deckKey],
             durationSec,
+          },
+        } as any;
+      }),
+
+    setCues: (deckIdx, cues) =>
+      set((state) => {
+        const deckKey = deckIdx === 1 ? 'deck1' : 'deck2';
+        return {
+          [deckKey]: {
+            ...state[deckKey],
+            cues,
           },
         } as any;
       }),

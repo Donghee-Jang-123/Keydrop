@@ -1,5 +1,7 @@
 /* KeyDROP UI (waveform/키보드/라이브러리: placeholder만) */
 
+
+
 :root {
   --bg0: rgb(53, 53, 53);
   --bg1: rgb(53, 53, 53);
@@ -74,6 +76,7 @@
 .kdTop__liveBtn {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  outline: none;
   color: var(--text);
   border-radius: 12px;
   padding: 6px 14px;
@@ -86,8 +89,20 @@
   height: 34px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  outline: none;
   background: radial-gradient(circle, #ff3a3a 0%, #b10000 60%, #4a0000 100%);
   box-shadow: 0 0 18px rgba(255, 58, 58, 0.25);
+}
+
+.kdTop__recBtn.isRecording {
+  animation: kdRecPulse 1s ease-in-out infinite;
+  box-shadow: 0 0 22px rgba(255, 58, 58, 0.45);
+}
+
+@keyframes kdRecPulse {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.08); filter: brightness(1.15); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
 
 .kdTop__user {
@@ -99,6 +114,7 @@
   place-items: center;
   color: rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: none;
 }
 
 /* Main 3-column */
@@ -161,18 +177,19 @@
 
 .deckPanel__titleRow {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  justify-content: left;
+  gap: 15px;
+  padding: 0px 7px 0px
 }
 .deckPanel__title {
   font-weight: 800;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: 0.02em;
 }
 .deckPanel__artist {
   margin-top: 2px;
-  font-size: 12px;
+  padding: 0px 7px 0px;
+  font-size: 14px;
   color: var(--muted);
 }
 .deckPanel__like {
@@ -180,24 +197,31 @@
 }
 
 .deckPanel__bpm {
-  text-align: right;
+  display: flex;
+  justify-content: right;
+  gap: 7px
 }
 .deckPanel__bpmLabel {
-  font-size: 11px;
+  font-size: 15px;
   color: var(--muted2);
 }
 .deckPanel__bpmValue {
-  font-size: 14px;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.8);
   font-weight: 700;
 }
 
 .deckPanel__subHeader {
   display: flex;
-  justify-content: space-between;
-  padding: 0 12px 10px;
+  justify-content: left;
+  padding: 0 12px;
+  gap: 7px;
   color: var(--muted2);
   font-size: 12px;
+}
+
+.deckPanel__subHeader--playing {
+  color: #fff;
 }
 
 .deckPanel__wavePlaceholder {
@@ -800,6 +824,7 @@
   appearance: none;
   background: transparent;
   border: 0;
+  outline: none;
   color: rgba(255,255,255,0.7);
   text-align: left;
   padding: 10px 16px;
@@ -875,23 +900,19 @@
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
-.library__row:hover {
-  background: rgba(255,255,255,0.05);
-}
 
 .library__col--play button {
   width: 24px;
   height: 24px;
   border: 0;
+  outline: none;
   border-radius: 4px;
   cursor: pointer;
   background: rgba(255,255,255,0.08);
   color: rgba(255,255,255,0.9);
 }
 
-.library__col--play button:hover {
-  background: rgba(255,255,255,0.14);
-}
+
 
 /* 선택된 곡 하이라이트 (아래 2번 기능이랑 같이 씀) */
 .library__row--selected {
@@ -929,6 +950,7 @@
   width: 100%;
   height: 100%;
   display: block;
+  overflow: visible;
 }
 
 .wave__bars {

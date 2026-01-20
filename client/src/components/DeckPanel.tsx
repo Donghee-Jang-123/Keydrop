@@ -22,14 +22,16 @@ interface DeckPanelProps {
 
 const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
   const deck = useDJStore((s) => (deckIdx === 1 ? s.deck1 : s.deck2));
+  const cue1Active = useDJStore((s) => !!s.activeControls?.[`deck${deckIdx}:cue1`]);
+  const cue2Active = useDJStore((s) => !!s.activeControls?.[`deck${deckIdx}:cue2`]);
   
   // 요청사항: Deck1/Deck2 모두 3x2 버튼(6개)로 통일
-  const cue1Key = deckIdx === 1 ? '1' : '8';
-  const cue2Key = deckIdx === 1 ? '2' : '9';
+  const cue1Key = deckIdx === 1 ? '1' : '9';
+  const cue2Key = deckIdx === 1 ? '2' : '0';
 
-  const pads: Array<{ label: string; keyHint: string; variant: 'gray' | 'red'; fx?: FxType }> = [
-    { label: 'cue 1', keyHint: cue1Key, variant: 'gray' },
-    { label: 'cue 2', keyHint: cue2Key, variant: 'gray' },
+  const pads: Array<{ label: string; keyHint: string; variant: 'gray' | 'red'; fx?: FxType; cueIndex?: 1 | 2 }> = [
+    { label: 'cue 1', keyHint: cue1Key, variant: 'gray', cueIndex: 1 },
+    { label: 'cue 2', keyHint: cue2Key, variant: 'gray', cueIndex: 2 },
     { label: 'slicer', keyHint: 'num4', variant: 'gray', fx: 'SLICER' },
     { label: 'kick', keyHint: 'num5', variant: 'gray', fx: 'KICK' },
     { label: 'crush', keyHint: 'num1', variant: 'gray', fx: 'CRUSH' },
@@ -56,9 +58,9 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
       </header>
 
 
-      <div className="deckPanel__subHeader">
+      <div className={`deckPanel__subHeader ${deck.isPlaying ? 'deckPanel__subHeader--playing' : ''}`}>
         <div className="deckPanel__time">{meta.time}</div>
-        <div className="deckPanel__duration">{meta.duration}</div>
+        /<div className="deckPanel__duration">{meta.duration}</div>
       </div>
 
       {/* 덱 내부 파형 (placeholder) */}
@@ -77,20 +79,20 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
                   label={p.label}
                   keyHint={p.keyHint}
                   variant={p.variant}
-                  active={p.fx ? deck.fx === p.fx : false}
+                  active={p.fx ? deck.fx === p.fx : p.cueIndex === 1 ? cue1Active : p.cueIndex === 2 ? cue2Active : false}
                   className={p.label.includes('cue') ? 'pad--cue' : ''}
                 />
               ))}
             </div>
             <div className="deckPanel__turntable">
-              <Turntable deckIdx={deckIdx} isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable deckIdx={deckIdx} isplay={deck.isPlaying} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
           </>
         ) : (
           /* Deck2(오른쪽 덱)은 "턴테이블(왼쪽) - 패드(오른쪽)" 배치 */
           <>
             <div className="deckPanel__turntable">
-              <Turntable deckIdx={deckIdx} isplay={deck.isplay} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable deckIdx={deckIdx} isplay={deck.isPlaying} keyHint={deckIdx === 1 ? 'G' : 'H'} />
             </div>
             <div className="deckPanel__pads deckPanel__pads--grid">
               {pads.map((p) => (
@@ -99,7 +101,7 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
                   label={p.label}
                   keyHint={p.keyHint}
                   variant={p.variant}
-                  active={p.fx ? deck.fx === p.fx : false}
+                  active={p.fx ? deck.fx === p.fx : p.cueIndex === 1 ? cue1Active : p.cueIndex === 2 ? cue2Active : false}
                   className={p.label.includes('cue') ? 'pad--cue' : ''}
                 />
               ))}

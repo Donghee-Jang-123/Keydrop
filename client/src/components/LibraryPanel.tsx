@@ -16,9 +16,6 @@ const LibraryPanel: React.FC = () => {
   const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);
   const { setLibraryTracks, requestLoadMusicFromDb } = useDJStore((s) => s.actions);
 
-  const deck1 = useDJStore((s) => s.deck1);
-  const deck2 = useDJStore((s) => s.deck2);
-
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -107,36 +104,7 @@ const LibraryPanel: React.FC = () => {
 
           </div>
 
-          <div className="library__table">
-            <div className="library__tableHeader">
-              <div className="library__col library__col--play" />
-              <div className="library__col library__col--title">Now Playing</div>
-              <div className="library__col library__col--bpm">BPM</div>
-              <div className="library__col library__col--dur">Time</div>
-            </div>
-
-            <div className="library__row">
-              <div className="library__col library__col--play">⏵</div>
-              <div className="library__col library__col--title">
-                Deck1: {deck1.trackTitle}
-              </div>
-              <div className="library__col library__col--bpm">{useDJStore.getState().deck1.trackBpm ?? '-'}</div>
-              <div className="library__col library__col--dur">
-                {deck1.durationSec ? formatTime(deck1.durationSec) : '-'}
-              </div>
-            </div>
-
-            <div className="library__row">
-              <div className="library__col library__col--play">⏵</div>
-              <div className="library__col library__col--title">
-                Deck2: {deck2.trackTitle}
-              </div>
-              <div className="library__col library__col--bpm">{useDJStore.getState().deck2.trackBpm ?? '-'}</div>
-              <div className="library__col library__col--dur">
-                {deck2.durationSec ? formatTime(deck2.durationSec) : '-'}
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </section>

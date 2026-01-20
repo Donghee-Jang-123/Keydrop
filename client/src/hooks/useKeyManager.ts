@@ -159,6 +159,14 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
 
         const cmd = KEY_MAP[keyCode];
 
+        // CUE 키는 TRIGGER지만 "누르는 동안" UI 하이라이트가 필요함
+        if (cmd.deck && cmd.type === 'TRIGGER' && cmd.action.startsWith('CUE')) {
+          const idx = parseInt(cmd.action.replace('CUE', ''), 10); // 1 or 2
+          if (idx === 1 || idx === 2) {
+            setControlActive(`deck${cmd.deck}:cue${idx}`, true);
+          }
+        }
+
         // FX 키는 "누르는 동안만 ON" (keydown에서 ON 처리)
         if (cmd.action === 'CRUSH' || cmd.action === 'FLANGER' || cmd.action === 'SLICER' || cmd.action === 'KICK') {
           const fx = cmd.action as FxType;
@@ -200,6 +208,15 @@ export const useKeyManager = (audioEngine: AudioEngine) => {
     // HOLD 컨트롤은 "조작 중" 표시 OFF
     const cid = getControlId(cmd);
     if (cid) setControlActive(cid, false);
+
+    // CUE 키는 keyup에서 UI 하이라이트 OFF 처리
+    if (cmd.deck && cmd.type === 'TRIGGER' && cmd.action.startsWith('CUE')) {
+      const idx = parseInt(cmd.action.replace('CUE', ''), 10); // 1 or 2
+      if (idx === 1 || idx === 2) {
+        setControlActive(`deck${cmd.deck}:cue${idx}`, false);
+      }
+    }
+
     if (cmd.action === 'CRUSH' || cmd.action === 'FLANGER' || cmd.action === 'SLICER' || cmd.action === 'KICK') {
       const deckAtKeyDown = activeFxKeyDeck.current.get(keyCode);
       if (!deckAtKeyDown) return;

@@ -3,6 +3,7 @@ import { useKeyManager } from '../hooks/useKeyManager';
 import { audioEngine } from '../services/audioEngine';
 import { useDJStore } from '../store/useDJStore';
 import { fetchMusicBlobByUrl } from '../api/musicApi';
+import { uploadRecording } from '../api/recordingApi';
 import { useNavigate } from 'react-router-dom';
 import { logout } from "../api/authApi";
 import DeckPanel from '../components/DeckPanel';
@@ -33,6 +34,7 @@ export default function DJPlayModePage() {
     clearDbLoadRequest,
     setPositionSec,
     setDurationSec,
+    setCues,
   } = useDJStore((s) => s.actions);
 
   const deck1 = useDJStore((s) => s.deck1);
@@ -44,6 +46,7 @@ export default function DJPlayModePage() {
   const cross = useDJStore((s) => s.crossFader);
 
   const [masterBpm, setMasterBpm] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     if (!filePickerDeck) return;
@@ -96,11 +99,13 @@ export default function DJPlayModePage() {
       if (s1) {
         setPositionSec(1, s1.positionSec);
         setDurationSec(1, s1.durationSec);
+        setCues(1, s1.cues ?? {});
       }
 
       if (s2) {
         setPositionSec(2, s2.positionSec);
         setDurationSec(2, s2.durationSec);
+        setCues(2, s2.cues ?? {});
       }
 
       if (!s1 && !s2) return;
@@ -171,7 +176,32 @@ export default function DJPlayModePage() {
             LIVE
           </button>
 
-          <button className="kdTop__recBtn" type="button" aria-label="Record" />
+          <button
+            className={`kdTop__recBtn ${isRecording ? 'isRecording' : ''}`}
+            type="button"
+            aria-label="Record"
+            onClick={async () => {
+              try {
+                if (!audioEngine.recorder.isRecording()) {
+                  await audioEngine.recorder.start();
+                  setIsRecording(true);
+                  return;
+                }
+
+                const blob = await audioEngine.recorder.stop();
+                setIsRecording(false);
+
+                const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
+                const name = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+                const file = new File([blob], name, { type: blob.type || `audio/${ext}` });
+
+                await uploadRecording(file);
+              } catch (err) {
+                console.error('[record] failed', err);
+                setIsRecording(audioEngine.recorder.isRecording());
+              }
+            }}
+          />
           <button className="kdTop__user" type="button" aria-label="User">
             ⦿
           </button>
