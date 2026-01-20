@@ -6,6 +6,7 @@ public record MusicDto(
     long bpm,
     String artists,
     String genre,
-    float duration,
-    String url
+    double duration,
+    String mp3Url,
+    String imageUrl
 ) {}

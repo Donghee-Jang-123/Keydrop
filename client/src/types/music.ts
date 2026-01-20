@@ -5,5 +5,6 @@ export type Music = {
   artists: string;
   genre: string | null;
   duration: number;
-  url: string;
+  mp3Url: string;
+  imageUrl: string;
 };
