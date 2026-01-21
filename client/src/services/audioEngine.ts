@@ -261,6 +261,19 @@ class KeydropAudioEngineAdapter {
     d.setFader(p.fader01);
   }
 
+  public stopAll() {
+    void this.ensureGraph().then(() => {
+      if (this.deck1?.getState().isPlaying) {
+        this.deck1.toggle();
+        useDJStore.getState().actions.setPlayState(1, false);
+      }
+      if (this.deck2?.getState().isPlaying) {
+        this.deck2.toggle();
+        useDJStore.getState().actions.setPlayState(2, false);
+      }
+    });
+  }
+
   private liveDest: MediaStreamAudioDestinationNode | null = null;
 
   private ensureLiveTap(): void {
@@ -339,20 +352,20 @@ class KeydropAudioEngineAdapter {
           this.activeFx[1] = fx;
         });
       },
-        startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
-          void this.ensureGraph().then(() => {
-            const d = this.getDeck(1);
-            d.startScratchHold(opts);
-          });
-        },
-        stopScratchHold: () => {
-          void this.ensureGraph().then(() => this.getDeck(1).stopScratchHold());
-        },
-        setPlaybackRate: (rate: number) => {
-          void this.ensureGraph().then(()=> {
-            this.getDeck(1).setPlaybackRate(rate);
-          })
-        }
+      startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
+        void this.ensureGraph().then(() => {
+          const d = this.getDeck(1);
+          d.startScratchHold(opts);
+        });
+      },
+      stopScratchHold: () => {
+        void this.ensureGraph().then(() => this.getDeck(1).stopScratchHold());
+      },
+      setPlaybackRate: (rate: number) => {
+        void this.ensureGraph().then(() => {
+          this.getDeck(1).setPlaybackRate(rate);
+        })
+      }
     },
     2: {
       adjustParam: (target: ControlTarget, delta: number) => {
@@ -413,72 +426,72 @@ class KeydropAudioEngineAdapter {
           this.activeFx[2] = fx;
         });
       },
-        startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
-          void this.ensureGraph().then(() => {
-            const d = this.getDeck(2);
+      startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
+        void this.ensureGraph().then(() => {
+          const d = this.getDeck(2);
 
-            d.startScratchHold(opts);
-          });
-        },
-        stopScratchHold: () => {
-          void this.ensureGraph().then(() => this.getDeck(2).stopScratchHold());
-        },
-        setPlaybackRate: (rate: number) => {
-          void this.ensureGraph().then(()=> {
-            this.getDeck(2).setPlaybackRate(rate);
-          })
-        }
+          d.startScratchHold(opts);
+        });
+      },
+      stopScratchHold: () => {
+        void this.ensureGraph().then(() => this.getDeck(2).stopScratchHold());
+      },
+      setPlaybackRate: (rate: number) => {
+        void this.ensureGraph().then(() => {
+          this.getDeck(2).setPlaybackRate(rate);
+        })
+      }
     },
   } as const;
 
-    public readonly mixerApi = {
-      adjustCrossFader: (delta: number) => {
-        void this.ensureGraph().then(() => {
-          this.cross = clamp11(this.cross + delta);
-          this.mixer?.setCrossfader(this.cross);
-        });
-      },
+  public readonly mixerApi = {
+    adjustCrossFader: (delta: number) => {
+      void this.ensureGraph().then(() => {
+        this.cross = clamp11(this.cross + delta);
+        this.mixer?.setCrossfader(this.cross);
+      });
+    },
 
-      sync: () => {
-        void this.ensureGraph().then(() => {
-          const d1 = this.getDeck(1);
-          const d2 = this.getDeck(2);
+    sync: () => {
+      void this.ensureGraph().then(() => {
+        const d1 = this.getDeck(1);
+        const d2 = this.getDeck(2);
 
-          const s1 = d1.getState();
-          const s2 = d2.getState();
+        const s1 = d1.getState();
+        const s2 = d2.getState();
 
-          // 둘 다 버퍼 없으면 스킵
-          if (!d1.getBuffer() || !d2.getBuffer()) {
-            return;
-          }
+        // 둘 다 버퍼 없으면 스킵
+        if (!d1.getBuffer() || !d2.getBuffer()) {
+          return;
+        }
 
-          let master: 1 | 2 | null = null;
-          let slave: 1 | 2 | null = null;
+        let master: 1 | 2 | null = null;
+        let slave: 1 | 2 | null = null;
 
-          if (s1.isPlaying && !s2.isPlaying) {
-            master = 1; slave = 2;
-          } else if (!s1.isPlaying && s2.isPlaying) {
-            master = 2; slave = 1;
-          } else if (s1.isPlaying && s2.isPlaying) {
-            master = 1; slave = 2;
-          } else {
-            return;
-          }
+        if (s1.isPlaying && !s2.isPlaying) {
+          master = 1; slave = 2;
+        } else if (!s1.isPlaying && s2.isPlaying) {
+          master = 2; slave = 1;
+        } else if (s1.isPlaying && s2.isPlaying) {
+          master = 1; slave = 2;
+        } else {
+          return;
+        }
 
-          const mDeck = master === 1 ? d1 : d2;
-          const sDeck = slave === 1 ? d1 : d2;
+        const mDeck = master === 1 ? d1 : d2;
+        const sDeck = slave === 1 ? d1 : d2;
 
-          // 분석이 없으면 즉석에서 분석(보험)
-          if (!this.beat[master]) this.beat[master] = this.beatAnalyzer.analyze(mDeck.getBuffer()!);
-          if (!this.beat[slave]) this.beat[slave] = this.beatAnalyzer.analyze(sDeck.getBuffer()!);
+        // 분석이 없으면 즉석에서 분석(보험)
+        if (!this.beat[master]) this.beat[master] = this.beatAnalyzer.analyze(mDeck.getBuffer()!);
+        if (!this.beat[slave]) this.beat[slave] = this.beatAnalyzer.analyze(sDeck.getBuffer()!);
 
-          const mA = this.beat[master]!;
-          const sA = this.beat[slave]!;
+        const mA = this.beat[master]!;
+        const sA = this.beat[slave]!;
 
-          this.syncService.syncSlaveToMaster(mDeck, sDeck, mA, sA);
-        });
-      },
-    } as const;
+        this.syncService.syncSlaveToMaster(mDeck, sDeck, mA, sA);
+      });
+    },
+  } as const;
 }
 
 const adapter = new KeydropAudioEngineAdapter();
@@ -489,6 +502,7 @@ export const audioEngine = {
   mixer: adapter.mixerApi,
   peekDeckState: (deckIdx: 1 | 2) => adapter.peekDeckState(deckIdx),
   getAnalyzedBpm: (deckIdx: 1 | 2) => adapter.getAnalyzedBpm(deckIdx),
+  stopAll: () => adapter.stopAll(),
   recorder: {
     isRecording: () => adapter.isRecording(),
     start: () => adapter.startRecording(),

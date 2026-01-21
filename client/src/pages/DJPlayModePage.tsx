@@ -242,6 +242,7 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
 
                 const blob = await audioEngine.recorder.stop();
                 setIsRecording(false);
+                audioEngine.stopAll();
 
                 const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
                 const tmpName = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;

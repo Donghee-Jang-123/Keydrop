@@ -133,6 +133,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
     stop();
     setChannelName("");
     setShowEndConfirm(false);
+    audioEngine.stopAll();
   };
 
   const onEndLive = () => {
@@ -178,7 +179,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
         </div>
 
         {isLive && (
-          <div style={{ display: "flex", alignItems: "center", gap: 18, marginRight: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 24, marginRight: 12, fontSize: "24px" }}>
             <div style={{ opacity: 0.85 }}>
               Channel: <span style={{ fontWeight: 600 }}>{channelName || "—"}</span>
             </div>
@@ -350,36 +351,57 @@ const DJHeader: React.FC<DJHeaderProps> = ({
       {/* End Live Confirmation Modal */}
       {showEndConfirm && (
         <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.6)",
-          zIndex: 9999,
-          display: "grid",
-          placeItems: "center",
-          backdropFilter: "blur(4px)"
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
         }}>
           <div style={{
-            background: "#1E1E1E",
-            padding: "24px 32px",
-            borderRadius: "12px",
-            textAlign: "center",
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
-            minWidth: "320px"
+            background: '#1E1E1E',
+            padding: '24px',
+            borderRadius: '12px',
+            width: '400px',
+            maxWidth: '90%',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.1)'
           }}>
-            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: 600 }}>
-              Are you sure you want to end the live stream?
-            </h3>
-            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+            <h2 style={{
+              marginTop: 0,
+              marginBottom: 12,
+              color: 'white',
+              fontSize: '20px',
+              fontWeight: 700,
+              textAlign: 'center'
+            }}>
+              End Live Stream
+            </h2>
+            <p style={{
+              margin: '0 0 24px',
+              color: '#aaaaaa',
+              fontSize: '15px',
+              textAlign: 'center',
+              lineHeight: 1.5
+            }}>
+              Are you sure you want to end the broadcast? Viewers will be disconnected.
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
               <button
                 onClick={() => setShowEndConfirm(false)}
                 style={{
-                  padding: "10px 20px",
-                  borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  background: "transparent",
-                  color: "#ddd",
-                  cursor: "pointer",
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  background: 'transparent',
+                  color: '#AAAAAA',
+                  cursor: 'pointer',
+                  fontSize: '14px',
                   fontWeight: 600
                 }}
               >
@@ -388,16 +410,17 @@ const DJHeader: React.FC<DJHeaderProps> = ({
               <button
                 onClick={confirmEndLive}
                 style={{
-                  padding: "10px 20px",
-                  borderRadius: "8px",
-                  border: "none",
-                  background: "#fee2e2", /* light redish */
-                  color: "#b91c1c",
-                  cursor: "pointer",
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#EF4444',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
                   fontWeight: 700
                 }}
               >
-                Confirm
+                End Live
               </button>
             </div>
           </div>
