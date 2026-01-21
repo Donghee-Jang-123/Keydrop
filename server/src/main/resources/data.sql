@@ -73,3 +73,17 @@ INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, d
 VALUES ('Walk On Water.mp3', 'Walk On Water.png', 'Walk On Water', 174, 'NCT, Southby & Emily J', 'Drum and Bass', 228)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
+-- Back To Default (Immy Odon)
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Back To Default.mp3', 'Back To Default.png', 'Back To Default', 172, 'Immy Odon', 'Drum & Bass', 203)
+ON CONFLICT (mp3_file_path) DO NOTHING;
+
+-- Break My Heart (Slushii & sapientdream)
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Break My Heart.mp3', 'Break My Heart.png', 'Break My Heart', 172, 'Slushii & sapientdream', 'Drum & Bass', 183)
+ON CONFLICT (mp3_file_path) DO NOTHING;
+
+-- Buried Alive (Badlokk feat. REEBZ)
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Buried Alive.mp3', 'Buried Alive.png', 'Buried Alive', 172, 'Badlokk (feat. REEBZ)', 'Drum & Bass', 351)
+ON CONFLICT (mp3_file_path) DO NOTHING;
