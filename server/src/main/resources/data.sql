@@ -1,9 +1,7 @@
--- 1. Techno 그룹
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('Cash Out.mp3', 'Cash Out.png', 'Cash Out', 160, 'Schrandy', 'Techno', 142)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
--- 2. House 그룹
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('harinezumi.mp3', 'harinezumi.png', 'harinezumi', 94, 'waera', 'House', 117)
 ON CONFLICT (mp3_file_path) DO NOTHING;
@@ -40,7 +38,6 @@ INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, d
 VALUES ('Heart My Heart.mp3', 'Heart My Heart.png', 'Heart My Heart', 124, 'intouch', 'House', 169)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
--- 3. Bass 그룹
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('Revenger.mp3', 'Revenger.png', 'Revenger', 150, 'Raiko', 'Bass', 182)
 ON CONFLICT (mp3_file_path) DO NOTHING;
@@ -57,7 +54,6 @@ INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, d
 VALUES ('stuckinmyhead.mp3', 'stuckinmyhead.png', 'stuckinmyhead!', 158, 'youth®', 'Bass', 92)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
--- 4. Trap 그룹
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('Losing Control.mp3', 'Losing Control.png', 'Losing Control', 155, 'JPB, Mendum & Marvin Divine', 'Trap', 187)
 ON CONFLICT (mp3_file_path) DO NOTHING;
@@ -78,7 +74,6 @@ INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, d
 VALUES ('Superhero.mp3', 'Superhero.png', 'Superhero', 150, 'Unknown Brain', 'Trap', 181)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
--- 5. Drum & Bass 그룹
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('Hardwired.mp3', 'Hardwired.png', 'Hardwired', 87, 'Rameses B', 'Drum & Bass', 302)
 ON CONFLICT (mp3_file_path) DO NOTHING;

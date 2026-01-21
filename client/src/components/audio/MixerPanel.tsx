@@ -35,14 +35,27 @@ const MixerPanel: React.FC<MixerPanelProps> = ({ masterBpm }) => {
 
       <div className="mixerPanel__knobCols">
         <div className="mixerPanel__knobCol">
-          <Knob deckIdx={1} knobType="mid" label="MID" />
-          <Knob deckIdx={1} knobType="bass" label="BASS" />
-          <Knob deckIdx={1} knobType="filter" label="Filter" />
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">A</span>
+            <Knob deckIdx={1} knobType="mid" label="MID" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">Q</span>
+          </div>
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">S</span>
+            <Knob deckIdx={1} knobType="bass" label="BASS" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">W</span>
+          </div>
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">D</span>
+            <Knob deckIdx={1} knobType="filter" label="Filter" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">E</span>
+          </div>
         </div>
 
         <div className="mixerPanel__faders">
           <div className="mixerPanel__vfader">
             <div className={`mixerPanel__vfaderTrack ${faderActive1 ? 'mixerPanel__vfaderTrack--active' : ''}`}>
+              <span className="mixerPanel__faderHint mixerPanel__faderHint--top">R</span>
               <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
               <div
                 className="mixerPanel__vfaderFill mixerPanel__vfaderFill--left"
@@ -50,10 +63,12 @@ const MixerPanel: React.FC<MixerPanelProps> = ({ masterBpm }) => {
                 aria-hidden="true"
               />
               <div className="mixerPanel__vfaderThumb mixerPanel__vfaderThumb--left" style={{ top: faderTop1 }} />
+              <span className="mixerPanel__faderHint mixerPanel__faderHint--bottom">F</span>
             </div>
           </div>
           <div className="mixerPanel__vfader">
             <div className={`mixerPanel__vfaderTrack ${faderActive2 ? 'mixerPanel__vfaderTrack--active' : ''}`}>
+              <span className="mixerPanel__faderHint mixerPanel__faderHint--top">U</span>
               <div className="mixerPanel__vfaderMeter" aria-hidden="true" />
               <div
                 className="mixerPanel__vfaderFill mixerPanel__vfaderFill--right"
@@ -61,14 +76,27 @@ const MixerPanel: React.FC<MixerPanelProps> = ({ masterBpm }) => {
                 aria-hidden="true"
               />
               <div className="mixerPanel__vfaderThumb mixerPanel__vfaderThumb--right" style={{ top: faderTop2 }} />
+              <span className="mixerPanel__faderHint mixerPanel__faderHint--bottom">J</span>
             </div>
           </div>
         </div>
 
         <div className="mixerPanel__knobCol">
-          <Knob deckIdx={2} knobType="mid" label="MID" />
-          <Knob deckIdx={2} knobType="bass" label="BASS" />
-          <Knob deckIdx={2} knobType="filter" label="Filter" />
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">;</span>
+            <Knob deckIdx={2} knobType="mid" label="MID" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">P</span>
+          </div>
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">L</span>
+            <Knob deckIdx={2} knobType="bass" label="BASS" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">O</span>
+          </div>
+          <div className="mixerPanel__knobWithHints">
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--left">K</span>
+            <Knob deckIdx={2} knobType="filter" label="Filter" />
+            <span className="mixerPanel__knobHint mixerPanel__knobHint--right">I</span>
+          </div>
         </div>
       </div>
 

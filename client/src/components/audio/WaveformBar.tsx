@@ -83,8 +83,10 @@ function drawWaveform(
     ctx.stroke();
   }
 
+  const shouldDrawCues = variant === 'deck';
+
   // CUE 마커(빨간 세로선)
-  if (cue01s && cue01s.length > 0) {
+  if (shouldDrawCues && cue01s && cue01s.length > 0) {
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 59, 59, 0.9)';
     ctx.lineWidth = 2;
@@ -99,7 +101,7 @@ function drawWaveform(
   }
 
   // CUE 라벨(작은 박스 + 1,2 텍스트)
-  if (cueLabels && cueLabels.length > 0) {
+  if (shouldDrawCues && cueLabels && cueLabels.length > 0) {
     ctx.save();
     ctx.font = '600 10px system-ui, -apple-system, Segoe UI, sans-serif';
     ctx.textBaseline = 'middle';

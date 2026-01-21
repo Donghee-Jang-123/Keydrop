@@ -446,6 +446,13 @@ html, body {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.35);
 }
+
+.turntable__btnKeyAbove {
+  position: absolute;
+  bottom: 80px; /* 기존 keyhint(20px)보다 15px 위 */
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}
 .turntable--playing .turntable__disc {
   animation: spin 2.2s linear infinite;
 }
@@ -504,6 +511,31 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+.mixerPanel__knobWithHints {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.mixerPanel__knobHint {
+  width: 14px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.02em;
+  user-select: none;
+  margin-top: 22px; /* knob label 아래, 다이얼 높이에 맞춰 정렬 */
+  line-height: 1;
+}
+
+.mixerPanel__knobHint--left {
+  justify-self: start;
+}
+.mixerPanel__knobHint--right {
+  justify-self: end;
 }
 
 /* reuse existing Knob styles */
@@ -604,6 +636,26 @@ html, body {
   position: relative;
   overflow: visible;     /* 중요: 바가 트랙 밖으로 튀어나올 수 있도록 설정 */
   padding: 15px 0;
+}
+
+.mixerPanel__faderHint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.02em;
+  user-select: none;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 4; /* thumb(3)보다 위 */
+}
+.mixerPanel__faderHint--top {
+  top: -18px;
+}
+.mixerPanel__faderHint--bottom {
+  bottom: -18px;
 }
 
 .mixerPanel__vfaderMeter {

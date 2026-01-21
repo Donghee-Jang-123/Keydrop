@@ -97,14 +97,24 @@ const DeckPanel: React.FC<DeckPanelProps> = ({ deckIdx, side, meta }) => {
               ))}
             </div>
             <div className="deckPanel__turntable">
-              <Turntable deckIdx={deckIdx} isplay={deck.isPlaying} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable
+                deckIdx={deckIdx}
+                isplay={deck.isPlaying}
+                playKeyHint={deckIdx === 1 ? 'G' : 'H'}
+                keyHint={deckIdx === 1 ? 'V' : 'N'}
+              />
             </div>
           </>
         ) : (
           /* Deck2(오른쪽 덱)은 "턴테이블(왼쪽) - 패드(오른쪽)" 배치 */
           <>
             <div className="deckPanel__turntable">
-              <Turntable deckIdx={deckIdx} isplay={deck.isPlaying} keyHint={deckIdx === 1 ? 'G' : 'H'} />
+              <Turntable
+                deckIdx={deckIdx}
+                isplay={deck.isPlaying}
+                playKeyHint={deckIdx === 1 ? 'G' : 'H'}
+                keyHint={deckIdx === 1 ? 'V' : 'N'}
+              />
             </div>
             <div className="deckPanel__pads deckPanel__pads--grid">
               {pads.map((p) => (
