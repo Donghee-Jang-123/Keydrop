@@ -43,8 +43,28 @@ export default function LiveViewerPage() {
         setIsEnded(true);
       });
 
+      lkChannel.on(RoomEvent.ParticipantDisconnected, () => {
+        // If the DJ leaves, the room might stay open but empty.
+        // We consider it ended if no remote participants remain.
+        if (lkChannel.remoteParticipants.size === 0) {
+          console.log("[LiveViewer] DJ left -> Ended");
+          setJoined(false);
+          setIsEnded(true);
+        }
+      });
+
       await lkChannel.connect(url, token);
       console.log("[LiveViewer] Connected to room:", lkChannel.name);
+
+      // Check if room is active (has DJ)
+      if (lkChannel.remoteParticipants.size === 0) {
+        console.log("[LiveViewer] Room is empty -> Not Active");
+        lkChannel.disconnect();
+        channelRef.current = null;
+        setJoined(false);
+        setNotFound(true);
+        return;
+      }
 
       // autoplay 보강
       audioRef.current?.play().catch(() => { });
@@ -145,10 +165,10 @@ export default function LiveViewerPage() {
               width: "90%"
             }}>
               <h2 style={{ margin: "0 0 16px", fontSize: "22px", fontWeight: 700, color: "#ff4d4d" }}>
-                Live stream not found
+                Channel Inactive
               </h2>
               <p style={{ margin: "0 0 24px", color: "#aaa", lineHeight: "1.5" }}>
-                The channel <strong style={{ color: "#fff" }}>{channel}</strong> does not exist or is not live.
+                The channel <strong style={{ color: "#fff" }}>{channel}</strong> is not currently active.
               </p>
               <button
                 onClick={() => nav("/")}

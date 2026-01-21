@@ -125,16 +125,27 @@ const DJHeader: React.FC<DJHeaderProps> = ({
     }
   };
 
-  const onEndLive = () => {
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const confirmEndLive = () => {
     if (!canUsePremium) return;
     stop();
     setChannelName("");
+    setShowEndConfirm(false);
+  };
+
+  const onEndLive = () => {
+    if (!canUsePremium) return;
+    setShowEndConfirm(true);
   };
 
   const onCopyLink = async () => {
     if (!liveUrl) return;
     try {
       await navigator.clipboard.writeText(liveUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch {
       window.prompt("복사해서 공유하세요: ", liveUrl);
     }
@@ -216,23 +227,45 @@ const DJHeader: React.FC<DJHeaderProps> = ({
               </div>
 
               {isLive && liveUrl && (
-                <span
-                  onClick={onCopyLink}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 13,
-                    opacity: 0.85,
-                    cursor: "pointer",
-                    transition: "opacity 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
-                >
-                  Copy a link
-                  <i className="fa-regular fa-copy" style={{ fontSize: 14 }} />
-                </span>
+                <div style={{ position: "relative" }}>
+                  <span
+                    onClick={onCopyLink}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 13,
+                      opacity: 0.85,
+                      cursor: "pointer",
+                      transition: "opacity 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
+                  >
+                    Copy a link
+                    <i className="fa-regular fa-copy" style={{ fontSize: 14 }} />
+                  </span>
+                  {linkCopied && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      marginTop: 8,
+                      background: '#333',
+                      color: '#fff',
+                      padding: '4px 8px',
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      pointerEvents: 'none',
+                      zIndex: 200
+                    }}>
+                      Link Copied!
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Record 버튼 (로그인 잠금 + tooltip) */}
@@ -313,6 +346,63 @@ const DJHeader: React.FC<DJHeaderProps> = ({
         onCancel={() => onCloseSaveModal?.()}
         onSave={(filename) => onSaveRecording?.(filename)}
       />
+
+      {/* End Live Confirmation Modal */}
+      {showEndConfirm && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.6)",
+          zIndex: 9999,
+          display: "grid",
+          placeItems: "center",
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "#1E1E1E",
+            padding: "24px 32px",
+            borderRadius: "12px",
+            textAlign: "center",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            minWidth: "320px"
+          }}>
+            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: 600 }}>
+              Are you sure you want to end the live stream?
+            </h3>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  background: "transparent",
+                  color: "#ddd",
+                  cursor: "pointer",
+                  fontWeight: 600
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmEndLive}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#fee2e2", /* light redish */
+                  color: "#b91c1c",
+                  cursor: "pointer",
+                  fontWeight: 700
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
