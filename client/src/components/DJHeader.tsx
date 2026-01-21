@@ -22,6 +22,8 @@ interface DJHeaderProps {
   showSaveModal?: boolean;
   onCloseSaveModal?: () => void;
   onSaveRecording?: (filename: string) => void;
+  showSaveSuccess?: boolean;
+  onCloseSaveSuccess?: () => void;
   hideLibrary?: boolean;
   viewerMode?: boolean;
 }
@@ -66,6 +68,8 @@ const DJHeader: React.FC<DJHeaderProps> = ({
   showSaveModal,
   onCloseSaveModal,
   onSaveRecording,
+  showSaveSuccess,
+  onCloseSaveSuccess,
   hideLibrary,
   viewerMode
 }) => {
@@ -126,6 +130,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
   };
 
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showEndSuccess, setShowEndSuccess] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const confirmEndLive = () => {
@@ -134,6 +139,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
     setChannelName("");
     setShowEndConfirm(false);
     audioEngine.stopAll();
+    setShowEndSuccess(true);
   };
 
   const onEndLive = () => {
@@ -422,6 +428,132 @@ const DJHeader: React.FC<DJHeaderProps> = ({
                 }}
               >
                 End Live
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Live Ended Success Modal */}
+      {showEndSuccess && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#1E1E1E',
+            padding: '24px',
+            borderRadius: '12px',
+            width: '400px',
+            maxWidth: '90%',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <h2 style={{
+              marginTop: 0,
+              marginBottom: 12,
+              color: 'white',
+              fontSize: '20px',
+              fontWeight: 700,
+              textAlign: 'center'
+            }}>
+              Live Ended
+            </h2>
+            <p style={{
+              margin: '0 0 24px',
+              color: '#aaaaaa',
+              fontSize: '15px',
+              textAlign: 'center',
+              lineHeight: 1.5
+            }}>
+              The live stream has ended.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => setShowEndSuccess(false)}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#EF4444',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 700
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recording Saved Success Modal */}
+      {showSaveSuccess && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#1E1E1E',
+            padding: '24px',
+            borderRadius: '12px',
+            width: '400px',
+            maxWidth: '90%',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <h2 style={{
+              marginTop: 0,
+              marginBottom: 12,
+              color: 'white',
+              fontSize: '20px',
+              fontWeight: 700,
+              textAlign: 'center'
+            }}>
+              Recording Saved
+            </h2>
+            <p style={{
+              margin: '0 0 24px',
+              color: '#aaaaaa',
+              fontSize: '15px',
+              textAlign: 'center',
+              lineHeight: 1.5
+            }}>
+              Your recording has been saved.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => onCloseSaveSuccess?.()}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#4ADE80',
+                  color: 'black',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 700
+                }}
+              >
+                Confirm
               </button>
             </div>
           </div>
