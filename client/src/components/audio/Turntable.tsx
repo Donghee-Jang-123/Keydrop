@@ -16,7 +16,7 @@ const Turntable: React.FC<TurntableProps> = ({ isplay, keyHint, deckIdx }) => {
       <div className="turntable__disc" />
       <div className="turntable__center" />
       <div className="turntable__btn" aria-hidden="true">
-        <div className="turntable__btnIcon">{isplay ? '⏸' : '▶'}</div>
+        <div className="turntable__btnIcon">{isplay ? '\u23F8\uFE0E' : '\u25B6\uFE0E'}</div>
         <div className="turntable__btnKey">{keyHint}</div>
       </div>
     </div>

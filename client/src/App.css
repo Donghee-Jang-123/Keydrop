@@ -1,5 +1,10 @@
 /* KeyDROP UI (waveform/키보드/라이브러리: placeholder만) */
-
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* 전체 스크롤 방지 */
+}
 
 
 :root {
@@ -799,7 +804,7 @@
 
 /* DJPlayModePage 하단 라이브러리 영역 */
 .kdLibrary {
-  height: 260px;            /* 화면에 맞게 조절 */
+  height: 220px;            /* 화면에 맞게 조절 */
   border-top: 1px solid rgba(255,255,255,0.06);
   background: #1f1f1f;
   overflow: hidden;
@@ -865,11 +870,23 @@
 .library__genre {
   padding: 8px 14px;
   color: rgba(255,255,255,0.65);
+  appearance: none;
+  background: transparent;
+  border: 0;
+  outline: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }
 
 .library__genre:hover {
   background: rgba(255,255,255,0.06);
   color: rgba(255,255,255,0.9);
+}
+
+.library__genre--active {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.95);
 }
 
 /* 테이블 영역 */
@@ -895,13 +912,13 @@
   background: #202020;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   display: grid;
-  grid-template-columns: 38px 1fr 60px 60px;
+  grid-template-columns: 38px 1fr 400px 60px 60px;
   padding: 8px 10px;
 }
 
 .library__row {
   display: grid;
-  grid-template-columns: 38px 1fr 60px 60px;
+  grid-template-columns: 38px 1fr 400px 60px 60px;
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }

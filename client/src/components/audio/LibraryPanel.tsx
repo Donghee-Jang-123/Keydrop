@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { fetchMusicList } from '../../api/musicApi';
 import { useDJStore } from '../../store/useDJStore';
 
@@ -14,11 +14,14 @@ interface LibraryPanelProps {
 }
 
 const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
+  const ALL_GENRE = 'All';
   const tracks = useDJStore((s) => s.libraryTracks);
   const selectedIndex = useDJStore((s) => s.librarySelectedIndex);
 
   const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);
   const { setLibraryTracks, requestLoadMusicFromDb } = useDJStore((s) => s.actions);
+
+  const [selectedGenre, setSelectedGenre] = useState<string>(ALL_GENRE);
 
   useEffect(() => {
     let alive = true;
@@ -47,6 +50,21 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
     return Array.from(set);
   }, [tracks]);
 
+  // 트랙 목록이 바뀌었는데 선택된 장르가 사라졌으면 All로 되돌림
+  useEffect(() => {
+    if (selectedGenre === ALL_GENRE) return;
+    if (genres.includes(selectedGenre)) return;
+    setSelectedGenre(ALL_GENRE);
+  }, [ALL_GENRE, genres, selectedGenre]);
+
+  const visibleTracks = useMemo(() => {
+    if (selectedGenre === ALL_GENRE) return tracks;
+    const target = selectedGenre.trim();
+    return tracks.filter((t) => (t.genre ?? '').trim() === target);
+  }, [ALL_GENRE, selectedGenre, tracks]);
+
+  const selectedTrackId = tracks[selectedIndex]?.musicId;
+
   return (
     <section className="library" aria-label="Library">
       <aside className="library__side">
@@ -57,21 +75,31 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
           <button className="library__navItem" type="button">
             Likes
           </button>
-          <button className="library__navItem" type="button">
-            Upload
-          </button>
-          <button className="library__navItem" type="button">
-            Sampler
-          </button>
+          
         </div>
       </aside>
 
       <div className="library__main">
         <div className="library__genres">
+          <button
+            type="button"
+            className={`library__genre ${selectedGenre === ALL_GENRE ? 'library__genre--active' : ''}`}
+            aria-pressed={selectedGenre === ALL_GENRE}
+            onClick={() => setSelectedGenre(ALL_GENRE)}
+          >
+            {ALL_GENRE}
+          </button>
+
           {genres.map((g) => (
-            <div key={g} className="library__genre">
+            <button
+              key={g}
+              type="button"
+              className={`library__genre ${selectedGenre === g ? 'library__genre--active' : ''}`}
+              aria-pressed={selectedGenre === g}
+              onClick={() => setSelectedGenre(g)}
+            >
               {g}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -79,15 +107,16 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
           <div className="library__table">
             <div className="library__tableHeader">
               <div className="library__col library__col--play" />
-              <div className="library__col library__col--title">Search for music...</div>
+              <div className="library__col library__col--title">Title</div>
+              <div className="library__col library__col--artist">Artist</div>
               <div className="library__col library__col--bpm">BPM</div>
               <div className="library__col library__col--dur">Time</div>
             </div>
 
-            {tracks.map((t, idx) => (
+            {visibleTracks.map((t) => (
               <div
                 key={t.musicId}
-                className={`library__row ${idx === selectedIndex ? 'library__row--selected' : ''}`}
+                className={`library__row ${t.musicId === selectedTrackId ? 'library__row--selected' : ''}`}
               >
                 <div className="library__col library__col--play">
                   <button
@@ -100,8 +129,9 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
                 </div>
 
                 <div className="library__col library__col--title">
-                  {t.title} - {t.artists}
+                  {t.title}
                 </div>
+                <div className="library__col library__col--artist">{t.artists}</div>
                 <div className="library__col library__col--bpm">{t.bpm}</div>
                 <div className="library__col library__col--dur">{formatTime(t.duration)}</div>
               </div>
