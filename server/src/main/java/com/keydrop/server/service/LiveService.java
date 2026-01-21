@@ -25,32 +25,45 @@ public class LiveService {
 
   public LiveController.TokenResponse issue(LiveController.TokenRequest req) {
 
-    String room = (req.room() == null || req.room().isBlank())
-        ? "default"
-        : req.room();
+    // Validate configuration
+    if (livekitUrl == null || livekitUrl.isBlank() ||
+        apiKey == null || apiKey.isBlank() ||
+        apiSecret == null || apiSecret.isBlank()) {
+      throw new RuntimeException("LiveKit configuration missing: Check LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET");
+    }
 
-    String role = (req.role() == null)
-        ? "VIEWER"
-        : req.role().toUpperCase();
+    try {
+      String room = (req.room() == null || req.room().isBlank())
+          ? "default"
+          : req.room();
 
-    String identity = (req.identity() == null || req.identity().isBlank())
-        ? role.toLowerCase() + "-" + UUID.randomUUID()
-        : req.identity();
+      String role = (req.role() == null)
+          ? "VIEWER"
+          : req.role().toUpperCase();
 
-    boolean isDj = "DJ".equals(role);
+      String identity = (req.identity() == null || req.identity().isBlank())
+          ? role.toLowerCase() + "-" + UUID.randomUUID()
+          : req.identity();
 
-    AccessToken token = new AccessToken(apiKey, apiSecret);
-    token.setIdentity(identity);
-    token.setName(identity);
-    
-    // Add grants using individual grant classes
-    token.addGrants(
-        new RoomJoin(true),
-        new RoomName(room),
-        new CanSubscribe(true),
-        new CanPublish(isDj)
-    );
+      boolean isDj = "DJ".equals(role);
 
-    return new LiveController.TokenResponse(token.toJwt(), livekitUrl);
+      AccessToken token = new AccessToken(apiKey, apiSecret);
+      token.setIdentity(identity);
+      token.setName(identity);
+      
+      // Add grants using individual grant classes
+      token.addGrants(
+          new RoomJoin(true),
+          new RoomName(room),
+          new CanSubscribe(true),
+          new CanPublish(isDj)
+      );
+
+      return new LiveController.TokenResponse(token.toJwt(), livekitUrl);
+    } catch (Exception e) {
+      // Log the full stack trace
+      e.printStackTrace();
+      throw new RuntimeException("Failed to generate LiveKit token: " + e.getMessage(), e);
+    }
   }
 }
