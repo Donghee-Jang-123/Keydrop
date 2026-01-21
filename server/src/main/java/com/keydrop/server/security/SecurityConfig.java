@@ -45,11 +45,15 @@ public class SecurityConfig {
     config.setAllowedOrigins(List.of("https://keydrop-rho.vercel.app"));
 
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
-    config.setExposedHeaders(List.of("Authorization"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setExposedHeaders(List.of("*"));
 
-    // withCredentials=false 이므로 false
-    config.setAllowCredentials(false);
+    config.setAllowCredentials(true);
+
+    config.setAllowedOrigins(List.of(
+      "https://keydrop-rho.vercel.app",
+      "http://localhost:5173"
+    ));
 
     config.setMaxAge(3600L);
 
