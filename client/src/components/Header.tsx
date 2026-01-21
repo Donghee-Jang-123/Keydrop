@@ -1,6 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 
-export default function Header() {
+interface HeaderProps {
+    onEnterChannel?: () => void;
+}
+
+export default function Header({ onEnterChannel }: HeaderProps) {
     const location = useLocation();
     const isActive = (path: string) => location.pathname === path ? { fontWeight: 800 } : {};
 
@@ -27,9 +31,15 @@ export default function Header() {
                         </span>
                     )}
                 </div>
-                <Link to="/live" className="auth-cta-btn">
-                    Enter a Live Channel
-                </Link>
+                {onEnterChannel ? (
+                    <button className="auth-cta-btn" onClick={onEnterChannel} style={{ cursor: "pointer", border: "none", fontSize: "inherit", fontFamily: "inherit" }}>
+                        Enter a Live Channel
+                    </button>
+                ) : (
+                    <Link to="/live" className="auth-cta-btn">
+                        Enter a Live Channel
+                    </Link>
+                )}
             </nav>
         </header>
     );
