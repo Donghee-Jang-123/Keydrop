@@ -93,7 +93,7 @@ export default function LiveViewerPage() {
               cursor: joining ? "not-allowed" : "pointer",
             }}
           >
-            {joining ? "입장 중..." : "입장하기"}
+            {joining ? "Entering..." : "Enter the channel"}
           </button>
         ) : null}
       </div>
