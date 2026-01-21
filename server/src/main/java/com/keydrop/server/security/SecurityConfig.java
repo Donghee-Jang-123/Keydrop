@@ -11,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy;
 
 @Configuration
 public class SecurityConfig {
@@ -23,7 +24,7 @@ public class SecurityConfig {
       .httpBasic(httpBasic -> httpBasic.disable())
       .formLogin(form -> form.disable())
       // 정적 자원(오디오 등)을 다른 도메인(Vercel)에서 로드할 수 있도록 CORP 설정 완화
-      .headers(headers -> headers.crossOriginResourcePolicy(p -> p.disable()))
+      .headers(headers -> headers.crossOriginResourcePolicy(p -> p.policy(CrossOriginResourcePolicy.CROSS_ORIGIN)))
       .authorizeHttpRequests(auth -> auth
         // 프리플라이트 무조건 허용
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
