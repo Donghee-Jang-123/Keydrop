@@ -20,6 +20,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
     // Ensure the path ends with a slash for the resource handler
     String location = Paths.get(mediaDir).toUri().toString();
+    if (!location.endsWith("/")) {
+      location += "/";
+    }
     
     // Map URL /media/** -> File System Path
     registry.addResourceHandler(mediaUrlPrefix + "/**")

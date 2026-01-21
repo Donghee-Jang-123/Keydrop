@@ -419,7 +419,7 @@ export default function TutorialModePage() {
                                 else nav('/dj');
                             }}
                             style={{
-                                marginTop: '5px', // FIXED: Tighter spacing (Total gap ~15px)
+                                marginTop: '5px',
                                 padding: '10px 0',
                                 width: '120px',
                                 background: 'var(--green)',
@@ -434,6 +434,30 @@ export default function TutorialModePage() {
                             {currentStep.id === 10 ? 'Finish' : 'Next'}
                         </button>
                     )}
+
+                    {/* Skip Text Link */}
+                    <div
+                        onClick={() => nav('/dj')}
+                        style={{
+                            position: 'absolute',
+                            bottom: '15px',
+                            right: '25px',
+                            fontSize: '13px',
+                            color: '#777',
+                            cursor: 'pointer',
+                            transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#ccc';
+                            e.currentTarget.style.textDecoration = 'underline';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#777';
+                            e.currentTarget.style.textDecoration = 'none';
+                        }}
+                    >
+                        Skip Tutorial
+                    </div>
                 </div>
             </div>
 
@@ -446,25 +470,7 @@ export default function TutorialModePage() {
                 fileInputRef={fileInputRef}
                 onFileChange={() => { }}
                 libraryElement={<LibraryPanel fetchOnMount={false} />}
-                headerExtra={
-                    <button
-                        onClick={() => nav('/dj')}
-                        style={{
-                            marginRight: '20px',
-                            padding: '8px 16px',
-                            background: '#333',
-                            color: '#aaa',
-                            border: '1px solid #555',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            zIndex: 10000,
-                            position: 'relative',
-                            pointerEvents: 'auto' // Ensure clickable
-                        }}
-                    >
-                        Skip Tutorial Mode
-                    </button>
-                }
+                // headerExtra removed
                 showSaveModal={false}
                 onCloseSaveModal={() => { }}
                 onSaveRecording={() => { }}
