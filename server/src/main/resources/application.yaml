@@ -42,3 +42,8 @@ jwt:
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
   client-secret: ${GOOGLE_CLIENT_SECRET:}
+
+livekit:
+  url: ${LIVEKIT_URL}
+  apiKey: ${LIVEKIT_API_KEY}
+  apiSecret: ${LIVEKIT_API_SECRET}

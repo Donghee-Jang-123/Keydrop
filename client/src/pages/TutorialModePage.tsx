@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DJLayout from '../components/DJLayout';
+import DJLayout from '../components/DJHeader';
 import LibraryPanel from '../components/audio/LibraryPanel';
 import { useDJStore } from '../store/useDJStore';
 import { audioEngine } from '../services/audioEngine';
@@ -152,7 +152,6 @@ export default function TutorialModePage() {
     const {
         setTrackTitle,
         setPlayState,
-        toggleFxTargetDeck,
         setDeckMetaFromDb,
         clearDbLoadRequest,
         setPositionSec,
@@ -445,11 +444,9 @@ export default function TutorialModePage() {
                 deck2Meta={deck2Meta}
                 masterBpm={masterBpm}
                 isRecording={isRecording}
-                onLogout={() => { }} // Disabled in tutorial
-                onToggleLive={toggleFxTargetDeck} // Allowed?
-                onToggleRecord={() => { }} // Disabled
+                onToggleRecord={() => { }}
                 fileInputRef={fileInputRef}
-                onFileChange={() => { }} // Disabled
+                onFileChange={() => { }}
                 libraryElement={<LibraryPanel fetchOnMount={false} />}
                 headerExtra={
                     <button

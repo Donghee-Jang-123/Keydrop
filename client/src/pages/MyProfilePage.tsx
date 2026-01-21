@@ -85,33 +85,29 @@ export default function MyProfilePage() {
 
   return (
     <div className="kd" style={{ background: "#2C2C2C", minHeight: "100vh", color: "white", fontFamily: "Inter, sans-serif" }}>
-      <div style={{ padding: "20px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div className="kdLogo" style={{ fontSize: 24, fontWeight: 700 }}>
-          KEY<span className="kdLogo__accent" style={{ color: "#4ADE80" }}>DROP</span>
+        <header className="kdTop">
+        <div className="kdTop__brand" style={{ display: "flex", alignItems: "center" }}>
+          <div className="auth-logo" onClick={() => nav("/dj")}>Key<span>DROP</span></div>
+          <div
+            style={{
+              marginLeft: 8,
+              color: "#9a9a9a",
+              fontSize: 13,
+              letterSpacing: "0.2px",
+              userSelect: "none",
+            }}
+          >
+            Turn your keyboard into a stage
+          </div>
         </div>
-        <button
-          onClick={async () => {
-            await logout();
-            nav("/login");
-          }}
-          style={{
-            background: "transparent",
-            border: "1px solid rgba(255,255,255,0.3)",
-            borderRadius: 20,
-            padding: "8px 24px",
-            color: "white",
-            cursor: "pointer",
-            fontSize: 14
-          }}
-        >
-          logout
-        </button>
-      </div>
+      </header>
 
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "0 20px" }}>
 
         {/* Profile Card */}
+
         <div style={{
+          position: "relative",
           background: "#1E1E1E",
           borderRadius: 16,
           padding: 32,
@@ -121,6 +117,30 @@ export default function MyProfilePage() {
           marginBottom: 32,
           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
         }}>
+                  <div
+          onClick={async () => {
+            await logout();
+            nav("/");
+          }}
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 22,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 16,
+            color: "#9a9a9a",
+            cursor: "pointer",
+            opacity: 0.85,
+            userSelect: "none",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
+        >
+          <i className="fa-solid fa-right-from-bracket" />
+          Logout
+        </div>
           {/* Avatar Section */}
           <div style={{
             width: 120,
