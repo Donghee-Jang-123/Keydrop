@@ -26,14 +26,12 @@ export default function LiveViewerPage() {
       channelRef.current = lkChannel;
 
       lkChannel.on("trackSubscribed", (track: any) => {
-        if (track?.kind !== "audio") return;
-
-        const el = track.attach() as HTMLMediaElement;
-        const src = (el as any).srcObject;
-
-        if (audioRef.current && src) {
-          audioRef.current.srcObject = src;
-          audioRef.current.play().catch(() => { });
+        console.log("[LiveViewer] Track subscribed:", track.kind);
+        if (track.kind === "audio") {
+          if (audioRef.current) {
+            track.attach(audioRef.current);
+            audioRef.current.play().catch((e: any) => console.error("[LiveViewer] Play failed", e));
+          }
         }
       });
 

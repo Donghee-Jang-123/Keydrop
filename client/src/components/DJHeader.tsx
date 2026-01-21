@@ -165,108 +165,112 @@ const DJHeader: React.FC<DJHeaderProps> = ({
         </div>
 
         {isLive && (
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginRight: 12 }}>
-                <div style={{ opacity: 0.85 }}>
-                Channel: <span style={{ fontWeight: 600 }}>{channelName || "—"}</span>
-                </div>
-                <div style={{ opacity: 0.85 }}>
-                DJ: <span style={{ fontWeight: 600 }}>{me?.nickname || "DJ"}</span>
-                </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, marginRight: 12 }}>
+            <div style={{ opacity: 0.85 }}>
+              Channel: <span style={{ fontWeight: 600 }}>{channelName || "—"}</span>
             </div>
+            <div style={{ opacity: 0.85 }}>
+              DJ: <span style={{ fontWeight: 600 }}>{me?.nickname || "DJ"}</span>
+            </div>
+          </div>
         )}
 
         <div className="kdTop__right" style={{ display: "flex", alignItems: "center", gap: 18 }}>
           {headerExtra}
 
-          {/* Live 버튼 (로그인 잠금 + tooltip) */}
-          <div
-            style={{ position: "relative" }}
-            onMouseEnter={() => { if (!canUsePremium) setLockTip("live"); }}
-            onMouseLeave={() => setLockTip(null)}
-          >
-            {!isLive ? (
-              <button
-                onClick={canUsePremium ? onStartLive : undefined}
-                disabled={!canUsePremium || liveBusy || isLive}
-                style={{
-                  cursor: !canUsePremium ? "not-allowed" : undefined,
-                  opacity: !canUsePremium ? 0.5 : 1,
-                }}
+          {!viewerMode && (
+            <>
+              {/* Live 버튼 (로그인 잠금 + tooltip) */}
+              <div
+                style={{ position: "relative" }}
+                onMouseEnter={() => { if (!canUsePremium) setLockTip("live"); }}
+                onMouseLeave={() => setLockTip(null)}
               >
-                {liveBusy ? "Starting..." : "Start Live"}
-              </button>
-            ) : (
-              <button
-                onClick={canUsePremium ? onEndLive : undefined}
-                disabled={!canUsePremium}
-                style={{
-                  cursor: !canUsePremium ? "not-allowed" : undefined,
-                  opacity: !canUsePremium ? 0.5 : 1,
-                }}
+                {!isLive ? (
+                  <button
+                    onClick={canUsePremium ? onStartLive : undefined}
+                    disabled={!canUsePremium || liveBusy || isLive}
+                    style={{
+                      cursor: !canUsePremium ? "not-allowed" : undefined,
+                      opacity: !canUsePremium ? 0.5 : 1,
+                    }}
+                  >
+                    {liveBusy ? "Starting..." : "Start Live"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={canUsePremium ? onEndLive : undefined}
+                    disabled={!canUsePremium}
+                    style={{
+                      cursor: !canUsePremium ? "not-allowed" : undefined,
+                      opacity: !canUsePremium ? 0.5 : 1,
+                    }}
+                  >
+                    End Live
+                  </button>
+                )}
+
+                {lockTip === "live" && !canUsePremium && <Tooltip text={LOCK_TIP} />}
+              </div>
+
+              {isLive && liveUrl && (
+                <span
+                  onClick={onCopyLink}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 13,
+                    opacity: 0.85,
+                    cursor: "pointer",
+                    transition: "opacity 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
+                >
+                  Copy a link
+                  <i className="fa-regular fa-copy" style={{ fontSize: 14 }} />
+                </span>
+              )}
+
+              {/* Record 버튼 (로그인 잠금 + tooltip) */}
+              <div
+                style={{ position: "relative", marginLeft: 12, marginRight: 8 }}
+                onMouseEnter={() => { if (!canUsePremium) setLockTip("record"); }}
+                onMouseLeave={() => setLockTip(null)}
               >
-                End Live
-              </button>
-            )}
+                <button
+                  className={`kdTop__recBtn ${isRecording ? "isRecording" : ""}`}
+                  type="button"
+                  aria-label="Record"
+                  onClick={canUsePremium ? onToggleRecord : undefined}
+                  disabled={!canUsePremium}
+                  style={{
+                    cursor: !canUsePremium ? "not-allowed" : undefined,
+                    opacity: !canUsePremium ? 0.5 : 1,
+                  }}
+                />
+                {lockTip === "record" && !canUsePremium && <Tooltip text={LOCK_TIP} />}
+              </div>
 
-            {lockTip === "live" && !canUsePremium && <Tooltip text={LOCK_TIP} />}
-          </div>
-
-          {isLive && liveUrl && (
-            <span
-                onClick={onCopyLink}
-                style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 13,
-                opacity: 0.85,
-                cursor: "pointer",
-                transition: "opacity 0.15s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
-            >
-                Copy a link
-                <i className="fa-regular fa-copy" style={{ fontSize: 14 }} />
-            </span>
-            )}
-
-          {/* Record 버튼 (로그인 잠금 + tooltip) */}
-          <div
-            style={{ position: "relative", marginLeft: 12, marginRight: 8 }}
-            onMouseEnter={() => { if (!canUsePremium) setLockTip("record"); }}
-            onMouseLeave={() => setLockTip(null)}
-            >
-            <button
-                className={`kdTop__recBtn ${isRecording ? "isRecording" : ""}`}
-                type="button"
-                aria-label="Record"
-                onClick={canUsePremium ? onToggleRecord : undefined}
-                disabled={!canUsePremium}
-                style={{
-                cursor: !canUsePremium ? "not-allowed" : undefined,
-                opacity: !canUsePremium ? 0.5 : 1,
-                }}
-            />
-            {lockTip === "record" && !canUsePremium && <Tooltip text={LOCK_TIP} />}
-            </div>
-
-          {/* Profile (로그인 안하면 hover tooltip + 클릭하면 /login) */}
-          <div
-            onClick={() => nav(isAuthed ? "/profile" : "/login")}
-            style={{ position: "relative", cursor: "pointer", display: "flex", alignItems: "center" }}
-            onMouseEnter={() => { if (!isAuthed) setLockTip("profile"); }}
-            onMouseLeave={() => setLockTip(null)}
-          >
-            <i
-            className="fa-solid fa-user"
-            style={{
-                fontSize: 27,
-                color: "#eaeaea",
-            }}
-            />
-            {!isAuthed && lockTip === "profile" && <Tooltip text={LOCK_TIP} />}
-          </div>
+              {/* Profile (로그인 안하면 hover tooltip + 클릭하면 /login) */}
+              <div
+                onClick={() => nav(isAuthed ? "/profile" : "/login")}
+                style={{ position: "relative", cursor: "pointer", display: "flex", alignItems: "center" }}
+                onMouseEnter={() => { if (!isAuthed) setLockTip("profile"); }}
+                onMouseLeave={() => setLockTip(null)}
+              >
+                <i
+                  className="fa-solid fa-user"
+                  style={{
+                    fontSize: 27,
+                    color: "#eaeaea",
+                  }}
+                />
+                {!isAuthed && lockTip === "profile" && <Tooltip text={LOCK_TIP} />}
+              </div>
+            </>
+          )}
         </div>
       </header>
 
