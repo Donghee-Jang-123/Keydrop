@@ -55,7 +55,7 @@ ON CONFLICT (mp3_file_path) DO NOTHING;
 
 -- stuckinmyhead! (youth®)
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
-VALUES ('stuckinmyhead!.mp3', 'stuckinmyhead!.png', 'stuckinmyhead!', 158, 'youth®', 'Hyperpop', 92)
+VALUES ('stuckinmyhead.mp3', 'stuckinmyhead.png', 'stuckinmyhead', 158, 'youth®', 'Hyperpop', 92)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
 -- Superhero (Unknown Brain)

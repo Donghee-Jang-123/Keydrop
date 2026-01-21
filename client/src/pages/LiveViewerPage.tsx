@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Room } from "livekit-client";
+import { Room, RoomEvent } from "livekit-client";
 import { fetchLiveKitToken } from "../api/liveApi";
 import DJPlayModePage from "../pages/DJPlayModePage";
 
@@ -12,12 +12,14 @@ export default function LiveViewerPage() {
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const channelRef = useRef<Room | null>(null);
 
   const join = async () => {
     if (!channel || joined || joining) return;
     setJoining(true);
-    setIsEnded(false); // reset
+    setIsEnded(false);
+    setNotFound(false);
 
     try {
       const { token, url } = await fetchLiveKitToken(channel, "VIEWER");
@@ -25,7 +27,7 @@ export default function LiveViewerPage() {
       const lkChannel = new Room({});
       channelRef.current = lkChannel;
 
-      lkChannel.on("trackSubscribed", (track: any) => {
+      lkChannel.on(RoomEvent.TrackSubscribed, (track: any) => {
         console.log("[LiveViewer] Track subscribed:", track.kind);
         if (track.kind === "audio") {
           if (audioRef.current) {
@@ -35,22 +37,27 @@ export default function LiveViewerPage() {
         }
       });
 
-      lkChannel.on("disconnected", () => {
+      lkChannel.on(RoomEvent.Disconnected, () => {
+        console.log("[LiveViewer] Disconnected");
         setJoined(false);
         setIsEnded(true);
       });
 
       await lkChannel.connect(url, token);
+      console.log("[LiveViewer] Connected to room:", lkChannel.name);
 
-      // autoplay 보강 (브라우저 정책 때문에 실패해도 OK)
+      // autoplay 보강
       audioRef.current?.play().catch(() => { });
 
       setJoined(true);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to join:", e);
       channelRef.current?.disconnect();
       channelRef.current = null;
       setJoined(false);
+
+      // Invalid channel handling
+      setNotFound(true);
     } finally {
       setJoining(false);
     }
@@ -125,8 +132,45 @@ export default function LiveViewerPage() {
             </div>
           )}
 
-          {/* 2. 입장 버튼 (종료되지 않았고, 입장 전일 때) */}
-          {!isEnded && (
+          {/* 2. 채널 없음 팝업 */}
+          {notFound && (
+            <div style={{
+              background: "#1E1E1E",
+              padding: "32px",
+              borderRadius: "16px",
+              textAlign: "center",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              maxWidth: "400px",
+              width: "90%"
+            }}>
+              <h2 style={{ margin: "0 0 16px", fontSize: "22px", fontWeight: 700, color: "#ff4d4d" }}>
+                Live stream not found
+              </h2>
+              <p style={{ margin: "0 0 24px", color: "#aaa", lineHeight: "1.5" }}>
+                The channel <strong style={{ color: "#fff" }}>{channel}</strong> does not exist or is not live.
+              </p>
+              <button
+                onClick={() => nav("/")}
+                style={{
+                  background: "#fff",
+                  color: "#000",
+                  border: "none",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  width: "100%"
+                }}
+              >
+                Go Home
+              </button>
+            </div>
+          )}
+
+          {/* 3. 입장 버튼 (종료되지 않았고, 찾지 못한 것도 아니고, 입장 전일 때) */}
+          {!isEnded && !notFound && (
             <button
               onClick={join}
               disabled={!channel || joining}

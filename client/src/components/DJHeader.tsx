@@ -66,9 +66,11 @@ const DJHeader: React.FC<DJHeaderProps> = ({
   showSaveModal,
   onCloseSaveModal,
   onSaveRecording,
-  hideLibrary
+  hideLibrary,
+  viewerMode
 }) => {
   const nav = useNavigate();
+  console.log("[DJHeader] viewerMode:", viewerMode);
 
   const [isAuthed, setIsAuthed] = useState(authStore.isAuthed());
   const [me, setMe] = useState<Me | null>(null);
