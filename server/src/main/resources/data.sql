@@ -3,6 +3,14 @@ VALUES ('Cash Out.mp3', 'Cash Out.png', 'Cash Out', 160, 'Schrandy', 'Techno', 1
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Mad.mp3', 'Mad.png', 'Mad', 133, 'BADA', 'Techno', 203)
+ON CONFLICT (mp3_file_path) DO NOTHING;
+
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Bakkwo.mp3', 'Bakkwo.png', 'Bakkwo', 140, 'Lee jung Hyun', 'Techno', 197)
+ON CONFLICT (mp3_file_path) DO NOTHING;
+
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('harinezumi.mp3', 'harinezumi.png', 'harinezumi', 94, 'waera', 'House', 117)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
@@ -59,6 +67,10 @@ VALUES ('Losing Control.mp3', 'Losing Control.png', 'Losing Control', 155, 'JPB,
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
 INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('Grasshopper World.mp3', 'Grasshopper World.png', 'Grasshopper World', 130, 'G-Park', 'Trap', 200)
+ON CONFLICT (mp3_file_path) DO NOTHING;
+
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
 VALUES ('FAVELA.mp3', 'FAVELA.png', 'FAVELA', 130, 'ANGELPLAYA & T-Mass', 'Trap', 116)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
@@ -94,3 +106,6 @@ INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, d
 VALUES ('Buried Alive.mp3', 'Buried Alive.png', 'Buried Alive', 172, 'Badlokk (feat. REEBZ)', 'Drum & Bass', 351)
 ON CONFLICT (mp3_file_path) DO NOTHING;
 
+INSERT INTO music (mp3_file_path, image_file_path, title, bpm, artists, genre, duration)
+VALUES ('JUMP.mp3', 'JUMP.png', 'JUMP', 145, 'BLACKPINK', 'Drum & Bass', 193)
+ON CONFLICT (mp3_file_path) DO NOTHING;
