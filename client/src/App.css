@@ -161,6 +161,24 @@
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.10);
+  overflow: hidden; /* 앨범 이미지가 커버 밖으로 나가지 않게 */
+  display: grid;
+  place-items: center;
+}
+
+.deckPanel__albumImg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover; /* 커버 박스에 맞춰 자르기 */
+  border-radius: inherit;
+}
+
+.deckPanel__albumPlaceholder {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .deckPanel__titleRow {
