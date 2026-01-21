@@ -130,8 +130,8 @@ export default function LiveViewerPage() {
               <h2 style={{ margin: "0 0 16px", fontSize: "22px", fontWeight: 700 }}>
                 The live stream has ended.
               </h2>
-              <p style={{ margin: "0 0 24px", color: "#aaa", lineHeight: "1.5" }}>
-                Why not try KeyDROP yourself?
+              <p style={{ margin: "0 0 20px", color: "#aaa", lineHeight: "1.5" }}>
+                Why not try our service yourself?
               </p>
               <button
                 onClick={() => nav("/")}

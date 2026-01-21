@@ -179,7 +179,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
         </div>
 
         {isLive && (
-          <div style={{ display: "flex", alignItems: "center", gap: 24, marginRight: 12, fontSize: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 24, marginRight: 12, fontSize: "22px" }}>
             <div style={{ opacity: 0.85 }}>
               Channel: <span style={{ fontWeight: 600 }}>{channelName || "—"}</span>
             </div>
@@ -388,10 +388,11 @@ const DJHeader: React.FC<DJHeaderProps> = ({
               textAlign: 'center',
               lineHeight: 1.5
             }}>
-              Are you sure you want to end the broadcast? Viewers will be disconnected.
+              Are you sure you want to end the broadcast?<br />
+              Viewers will be disconnected.
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
               <button
                 onClick={() => setShowEndConfirm(false)}
                 style={{

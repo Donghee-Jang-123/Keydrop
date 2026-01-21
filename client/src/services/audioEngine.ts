@@ -263,14 +263,11 @@ class KeydropAudioEngineAdapter {
 
   public stopAll() {
     void this.ensureGraph().then(() => {
-      if (this.deck1?.getState().isPlaying) {
-        this.deck1.toggle();
-        useDJStore.getState().actions.setPlayState(1, false);
-      }
-      if (this.deck2?.getState().isPlaying) {
-        this.deck2.toggle();
-        useDJStore.getState().actions.setPlayState(2, false);
-      }
+      this.deck1?.stop(false);
+      useDJStore.getState().actions.setPlayState(1, false);
+
+      this.deck2?.stop(false);
+      useDJStore.getState().actions.setPlayState(2, false);
     });
   }
 
