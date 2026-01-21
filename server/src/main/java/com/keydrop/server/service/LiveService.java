@@ -2,7 +2,10 @@ package com.keydrop.server.service;
 
 import com.keydrop.server.controller.LiveController;
 import io.livekit.server.AccessToken;
-import io.livekit.server.VideoGrant;
+import io.livekit.server.RoomJoin;
+import io.livekit.server.RoomName;
+import io.livekit.server.CanPublish;
+import io.livekit.server.CanSubscribe;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -36,16 +39,17 @@ public class LiveService {
 
     boolean isDj = "DJ".equals(role);
 
-    VideoGrant grant = new VideoGrant();
-    grant.setRoom(room);
-    grant.setRoomJoin(true);
-    grant.setCanSubscribe(true);
-    grant.setCanPublish(isDj);
-
     AccessToken token = new AccessToken(apiKey, apiSecret);
     token.setIdentity(identity);
     token.setName(identity);
-    token.addGrant(grant);
+    
+    // Add grants using individual grant classes
+    token.addGrants(
+        new RoomJoin(true),
+        new RoomName(room),
+        new CanSubscribe(true),
+        new CanPublish(isDj)
+    );
 
     return new LiveController.TokenResponse(token.toJwt(), livekitUrl);
   }
