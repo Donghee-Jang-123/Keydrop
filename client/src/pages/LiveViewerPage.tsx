@@ -109,12 +109,12 @@ export default function LiveViewerPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          padding: "0 14px 14px",
+          padding: "0 0 14px",
           zIndex: 5,
           pointerEvents: "none",
         }}
       >
-        <LiveAudioVisualizer audioRef={audioRef} height={160} barCount={48} idle />
+        <LiveAudioVisualizer audioRef={audioRef} height={160} barCount={48} idle edgeToEdge />
       </div>
 
       {/* 입장 UI 오버레이: joined 상태가 아닐 때만 표시 (Live Ended 상태 포함) */}

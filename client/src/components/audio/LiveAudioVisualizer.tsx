@@ -5,6 +5,10 @@ type Props = {
   height?: number;
   barCount?: number;
   /**
+   * 화면 끝까지 붙이는 용도 (라운드 제거)
+   */
+  edgeToEdge?: boolean;
+  /**
    * joined 전에도 화면이 덜 비어 보이도록 idle 애니메이션을 돌립니다.
    * 실제 오디오 분석이 가능해지면 자동으로 주파수 기반으로 전환됩니다.
    */
@@ -15,6 +19,7 @@ export default function LiveAudioVisualizer({
   audioRef,
   height = 150,
   barCount = 44,
+  edgeToEdge = false,
   idle = true,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -225,7 +230,7 @@ export default function LiveAudioVisualizer({
       style={{
         width: "100%",
         height,
-        borderRadius: 12,
+        borderRadius: edgeToEdge ? 0 : 12,
         overflow: "hidden",
         border: "1px solid rgba(255,255,255,0.10)",
         background: "rgba(0,0,0,0.28)",
