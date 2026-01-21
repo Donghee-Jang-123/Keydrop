@@ -226,7 +226,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.85")}
             >
-                링크 복사
+                Copy a link
                 <i className="fa-regular fa-copy" style={{ fontSize: 14 }} />
             </span>
             )}
