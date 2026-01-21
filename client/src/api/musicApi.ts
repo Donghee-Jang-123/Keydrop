@@ -22,6 +22,11 @@ export function resolveMusicUrl(url: string): string {
 
 export async function fetchMusicBlobByUrl(url: string): Promise<Blob> {
   const resolved = resolveMusicUrl(url);
-  const res = await api.get(resolved, { responseType: "blob" });
-  return res.data as Blob;
+  // Use native fetch to avoid Authorization header injection by axios interceptor
+  // and to ensure a simple GET request for static resources.
+  const response = await fetch(resolved);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch music: ${response.status} ${response.statusText}`);
+  }
+  return await response.blob();
 }
