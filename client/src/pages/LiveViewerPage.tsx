@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Room, RoomEvent } from "livekit-client";
 import { fetchLiveKitToken } from "../api/liveApi";
 import DJPlayModePage from "../pages/DJPlayModePage";
+import LiveAudioVisualizer from "../components/audio/LiveAudioVisualizer";
 
 export default function LiveViewerPage() {
   const { channel } = useParams<{ channel: string }>();
@@ -100,6 +101,21 @@ export default function LiveViewerPage() {
           <DJPlayModePage viewerMode={true} />
         </div>
       )}
+
+      {/* 하단 비주얼라이저(항상 노출): joined 전에도 덜 허전하게 */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          padding: "0 14px 14px",
+          zIndex: 5,
+          pointerEvents: "none",
+        }}
+      >
+        <LiveAudioVisualizer audioRef={audioRef} height={160} barCount={48} idle />
+      </div>
 
       {/* 입장 UI 오버레이: joined 상태가 아닐 때만 표시 (Live Ended 상태 포함) */}
       {!joined && (
