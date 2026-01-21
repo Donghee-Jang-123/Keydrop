@@ -22,6 +22,8 @@ interface DJHeaderProps {
   showSaveModal?: boolean;
   onCloseSaveModal?: () => void;
   onSaveRecording?: (filename: string) => void;
+  hideLibrary?: boolean;
+  viewerMode?: boolean;
 }
 
 type Me = { email: string; nickname: string | null };
@@ -64,6 +66,7 @@ const DJHeader: React.FC<DJHeaderProps> = ({
   showSaveModal,
   onCloseSaveModal,
   onSaveRecording,
+  hideLibrary
 }) => {
   const nav = useNavigate();
 
@@ -293,9 +296,11 @@ const DJHeader: React.FC<DJHeaderProps> = ({
         onChange={onFileChange}
       />
 
-      <section className="kdLibrary" aria-label="Library" id="library-container">
-        {libraryElement}
-      </section>
+      {!hideLibrary && (
+        <section className="kdLibrary" aria-label="Library" id="library-container">
+          {libraryElement}
+        </section>
+      )}
 
       <SaveRecordingModal
         isOpen={!!showSaveModal}

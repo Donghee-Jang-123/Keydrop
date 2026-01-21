@@ -2,30 +2,32 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Room } from "livekit-client";
 import { fetchLiveKitToken } from "../api/liveApi";
+import DJPlayModePage from "../pages/DJPlayModePage";
 
 export default function LiveViewerPage() {
-  const { room } = useParams<{ room: string }>();
+  const { channel } = useParams<{ channel: string }>();
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const [joining, setJoining] = useState(false);
   const [joined, setJoined] = useState(false);
-  const roomRef = useRef<Room | null>(null);
+  const channelRef = useRef<Room | null>(null);
 
   const join = async () => {
-    if (!room || joined || joining) return;
+    if (!channel || joined || joining) return;
     setJoining(true);
 
     try {
-      const { token, url } = await fetchLiveKitToken(room, "VIEWER");
+      const { token, url } = await fetchLiveKitToken(channel, "VIEWER");
 
-      const lkRoom = new Room();
-      roomRef.current = lkRoom;
+      const lkChannel = new Room({
+      });
+      channelRef.current = lkChannel;
 
-      lkRoom.on("trackSubscribed", (track) => {
-        if (track.kind !== "audio") return;
+      lkChannel.on("trackSubscribed", (track: any) => {
+        if (track?.kind !== "audio") return;
 
         const el = track.attach() as HTMLMediaElement;
-        const src = el.srcObject;
+        const src = (el as any).srcObject;
 
         if (audioRef.current && src) {
           audioRef.current.srcObject = src;
@@ -33,17 +35,16 @@ export default function LiveViewerPage() {
         }
       });
 
-      await lkRoom.connect(url, token);
+      await lkChannel.connect(url, token);
 
-      // autoplay 보강: connect 직후에도 한번 play 시도
+      // autoplay 보강 (브라우저 정책 때문에 실패해도 OK)
       audioRef.current?.play().catch(() => {});
 
       setJoined(true);
     } catch (e) {
       console.error(e);
-      // 실패하면 다시 시도할 수 있게
-      roomRef.current?.disconnect();
-      roomRef.current = null;
+      channelRef.current?.disconnect();
+      channelRef.current = null;
       setJoined(false);
     } finally {
       setJoining(false);
@@ -52,21 +53,37 @@ export default function LiveViewerPage() {
 
   useEffect(() => {
     return () => {
-        roomRef.current?.disconnect();
-        roomRef.current = null;
-    }
+      channelRef.current?.disconnect();
+      channelRef.current = null;
+    };
   }, []);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#0b0b0b", color: "#fff" }}>
       <audio ref={audioRef} autoPlay playsInline />
 
-      {/* 여기 배경에 DJPlayModePage readonly를 깔거나, showeffect 오버레이만 둬도 됨 */}
-      <div style={{ position: "fixed", inset: 0, display: "grid", placeItems: "center" }}>
+      {/* joined 되면 DJ 화면을 “배경으로만” 깔기 (조작 불가) */}
+      {joined && (
+        <div style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
+          <DJPlayModePage />
+        </div>
+      )}
+
+      {/* 입장 UI 오버레이 */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          background: joined ? "transparent" : "rgba(0,0,0,0.35)",
+          pointerEvents: "auto", // 버튼 클릭 가능해야 함
+        }}
+      >
         {!joined ? (
           <button
             onClick={join}
-            disabled={!room || joining}
+            disabled={!channel || joining}
             style={{
               padding: "12px 20px",
               borderRadius: 10,
@@ -78,9 +95,7 @@ export default function LiveViewerPage() {
           >
             {joining ? "입장 중..." : "입장하기"}
           </button>
-        ) : (
-          <div style={{ opacity: 0.8 }}>라이브 시청 중</div>
-        )}
+        ) : null}
       </div>
     </div>
   );
