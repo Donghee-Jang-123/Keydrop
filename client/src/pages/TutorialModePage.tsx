@@ -199,7 +199,6 @@ export default function TutorialModePage() {
                     const cueSet = d1 && d1.cues && (d1.cues[1] !== undefined);
                     if (cueSet) {
                         stepState.current.jumpCount = (stepState.current.jumpCount || 0) + 1;
-                        console.log(`[Tutorial] Step 3 Jump Count: ${stepState.current.jumpCount}`);
                     }
                 }
             }
@@ -207,7 +206,6 @@ export default function TutorialModePage() {
             if (currentStep.id === 6) {
                 if (e.code === 'KeyV' || e.key === 'v' || e.key === 'V') {
                     stepState.current.scratched = true;
-                    console.log(`[Tutorial] Step 6 Scratched: true`);
                 }
             }
         };

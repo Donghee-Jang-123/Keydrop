@@ -342,12 +342,6 @@ class KeydropAudioEngineAdapter {
         startScratchHold: (opts?: { grainMs?: number; jumpMs?: number; intensity?: number }) => {
           void this.ensureGraph().then(() => {
             const d = this.getDeck(1);
-
-            console.log('[SCRATCH] start requested (deck1)', {
-              hasBuffer: !!d.getBuffer(),
-              isPlaying: d.getState().isPlaying,
-            });
-
             d.startScratchHold(opts);
           });
         },
@@ -423,11 +417,6 @@ class KeydropAudioEngineAdapter {
           void this.ensureGraph().then(() => {
             const d = this.getDeck(2);
 
-            console.log('[SCRATCH] start requested (deck1)', {
-              hasBuffer: !!d.getBuffer(),
-              isPlaying: d.getState().isPlaying,
-            });
-
             d.startScratchHold(opts);
           });
         },
@@ -460,7 +449,6 @@ class KeydropAudioEngineAdapter {
 
           // 둘 다 버퍼 없으면 스킵
           if (!d1.getBuffer() || !d2.getBuffer()) {
-            console.log("[SYNC] skip: missing buffer");
             return;
           }
 
@@ -474,7 +462,6 @@ class KeydropAudioEngineAdapter {
           } else if (s1.isPlaying && s2.isPlaying) {
             master = 1; slave = 2;
           } else {
-            console.log("[SYNC] skip: both stopped");
             return;
           }
 
@@ -489,13 +476,6 @@ class KeydropAudioEngineAdapter {
           const sA = this.beat[slave]!;
 
           this.syncService.syncSlaveToMaster(mDeck, sDeck, mA, sA);
-
-          console.log(`[SYNC] master=Deck${master} slave=Deck${slave}`, {
-            masterBpm: mA.bpm,
-            slaveBpm: sA.bpm,
-            mConf: mA.confidence,
-            sConf: sA.confidence,
-          });
         });
       },
     } as const;
