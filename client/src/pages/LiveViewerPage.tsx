@@ -31,14 +31,14 @@ export default function LiveViewerPage() {
 
         if (audioRef.current && src) {
           audioRef.current.srcObject = src;
-          audioRef.current.play().catch(() => {});
+          audioRef.current.play().catch(() => { });
         }
       });
 
       await lkChannel.connect(url, token);
 
       // autoplay 보강 (브라우저 정책 때문에 실패해도 OK)
-      audioRef.current?.play().catch(() => {});
+      audioRef.current?.play().catch(() => { });
 
       setJoined(true);
     } catch (e) {
@@ -65,7 +65,7 @@ export default function LiveViewerPage() {
       {/* joined 되면 DJ 화면을 “배경으로만” 깔기 (조작 불가) */}
       {joined && (
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none" }}>
-          <DJPlayModePage />
+          <DJPlayModePage viewerMode={true} />
         </div>
       )}
 
