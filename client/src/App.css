@@ -973,6 +973,11 @@ html, body {
   grid-template-columns: 38px 1fr 400px 60px 60px;
   padding: 8px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+}
+
+.library__row:hover {
+  background: rgba(255,255,255,0.06);
 }
 
 
@@ -991,6 +996,10 @@ html, body {
 
 /* 선택된 곡 하이라이트 (아래 2번 기능이랑 같이 씀) */
 .library__row--selected {
+  background: rgba(255,255,255,0.10);
+}
+
+.library__row--selected:hover {
   background: rgba(255,255,255,0.10);
 }
 

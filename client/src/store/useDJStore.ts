@@ -57,6 +57,7 @@ interface DJState {
     clearLocalFileRequest: () => void;
     setTrackTitle: (deckIdx: 1 | 2, title: string) => void;
     setLibraryTracks: (tracks: Music[]) => void;
+    setLibrarySelectedIndex: (index: number) => void;
     selectNextTrack: () => void;
     requestLoadSelectedToDeck: (deckIdx: 1 | 2) => void;
     setWaveform: (deckIdx: 1 | 2, peaks: Float32Array) => void;
@@ -194,6 +195,15 @@ export const useDJStore = create<DJState>((set) => ({
         libraryTracks: tracks,
         librarySelectedIndex: tracks.length ? 0 : 0,
       })),
+
+    setLibrarySelectedIndex: (index) =>
+      set((state) => {
+        const n = state.libraryTracks.length;
+        if (!n) return state;
+        const next = clamp(index, 0, n - 1);
+        if (next === state.librarySelectedIndex) return state;
+        return { librarySelectedIndex: next };
+      }),
 
     selectNextTrack: () =>
       set((state) => {

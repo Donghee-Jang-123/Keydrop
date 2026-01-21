@@ -19,7 +19,7 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
   const selectedIndex = useDJStore((s) => s.librarySelectedIndex);
 
   const fxTargetDeck = useDJStore((s) => s.fxTargetDeck);
-  const { setLibraryTracks, requestLoadMusicFromDb } = useDJStore((s) => s.actions);
+  const { setLibraryTracks, setLibrarySelectedIndex, requestLoadMusicFromDb } = useDJStore((s) => s.actions);
 
   const [selectedGenre, setSelectedGenre] = useState<string>(ALL_GENRE);
 
@@ -62,6 +62,12 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
     const target = selectedGenre.trim();
     return tracks.filter((t) => (t.genre ?? '').trim() === target);
   }, [ALL_GENRE, selectedGenre, tracks]);
+
+  const indexById = useMemo(() => {
+    const map = new Map<number, number>();
+    tracks.forEach((t, idx) => map.set(t.musicId, idx));
+    return map;
+  }, [tracks]);
 
   const selectedTrackId = tracks[selectedIndex]?.musicId;
 
@@ -117,6 +123,18 @@ const LibraryPanel: React.FC<LibraryPanelProps> = ({ fetchOnMount = true }) => {
               <div
                 key={t.musicId}
                 className={`library__row ${t.musicId === selectedTrackId ? 'library__row--selected' : ''}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  const idx = indexById.get(t.musicId);
+                  if (idx !== undefined) setLibrarySelectedIndex(idx);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  const idx = indexById.get(t.musicId);
+                  if (idx !== undefined) setLibrarySelectedIndex(idx);
+                }}
               >
                 <div className="library__col library__col--play">
                   <button
