@@ -799,7 +799,7 @@
 
 /* DJPlayModePage 하단 라이브러리 영역 */
 .kdLibrary {
-  height: 260px;            /* 화면에 맞게 조절 */
+  height: 240px;            /* 화면에 맞게 조절 */
   border-top: 1px solid rgba(255,255,255,0.06);
   background: #1f1f1f;
   overflow: hidden;
