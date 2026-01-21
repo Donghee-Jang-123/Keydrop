@@ -38,10 +38,11 @@ public class RecordingController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public RecordingDto upload(
       @RequestHeader(value = "Authorization", required = false) String authorization,
-      @RequestPart("file") MultipartFile file
+      @RequestPart("file") MultipartFile file,
+      @RequestParam(value = "duration", required = false) Double duration
   ) {
     Long userId = resolveUserIdOrThrow(authorization);
-    return service.create(file, userId);
+    return service.create(file, duration, userId);
   }
 
   @GetMapping("/{id}/file")

@@ -21,15 +21,6 @@ export default function OnboardingPage() {
                     <button className="hero-btn hero-btn-primary" onClick={() => nav("/dj")}>
                         DJ Play Mode
                     </button>
-
-                    <button className="hero-btn hero-btn-secondary" onClick={() => {
-                        const channel = window.prompt("Enter channel name to join:");
-                        if (channel && channel.trim()) {
-                            nav(`/live/${channel.trim()}`);
-                        }
-                    }}>
-                        Enter a Channel
-                    </button>
                 </div>
             </div>
         </Layout>

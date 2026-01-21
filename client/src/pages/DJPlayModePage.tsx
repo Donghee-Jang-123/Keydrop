@@ -4,6 +4,7 @@ import { audioEngine } from '../services/audioEngine';
 import { useDJStore } from '../store/useDJStore';
 import { fetchMusicBlobByUrl } from '../api/musicApi';
 import { uploadRecording } from '../api/recordingApi';
+import AudioVisualizer from "../components/audio/AudioVisualizer";
 import LibraryPanel from '../components/audio/LibraryPanel';
 import DJHeader from '../components/DJHeader';
 
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export default function DJPlayModePage({ viewerMode = false }: Props) {
+  console.log("[DJPlayModePage] viewerMode:", viewerMode);
   // viewer면 키 입력/컨트롤 로직 전부 OFF
   const controlsEnabled = !viewerMode;
 
@@ -55,7 +57,10 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
   const [isRecording, setIsRecording] = useState(false);
 
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [pendingRecordingFile, setPendingRecordingFile] = useState<File | null>(null);
+  const [pendingRecordingDuration, setPendingRecordingDuration] = useState<number>(0);
+  const recordingStartTime = useRef<number>(0);
 
   useEffect(() => {
     if (!controlsEnabled) return; // viewer면 file picker 트리거도 막기
@@ -182,80 +187,89 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
         onFileChange={
           controlsEnabled
             ? async (e) => {
-                const deck = pendingDeckRef.current;
-                const file = e.target.files?.[0];
-                e.currentTarget.value = '';
+              const deck = pendingDeckRef.current;
+              const file = e.target.files?.[0];
+              e.currentTarget.value = '';
 
-                clearLocalFileRequest();
-                pendingDeckRef.current = null;
-                if (!deck || !file) return;
+              clearLocalFileRequest();
+              pendingDeckRef.current = null;
+              if (!deck || !file) return;
 
-                try {
-                  setPlayState(deck, false);
-                  setTrackTitle(deck, file.name);
-                  audioEngine.decks[deck].loadFile(file, 0);
-                } catch (err) {
-                  console.error('[loadFile] failed', err);
-                }
+              try {
+                setPlayState(deck, false);
+                setTrackTitle(deck, file.name);
+                audioEngine.decks[deck].loadFile(file, 0);
+              } catch (err) {
+                console.error('[loadFile] failed', err);
               }
-            : async () => {} // viewer에서는 의미없음
+            }
+            : async () => { } // viewer에서는 의미없음
         }
         showSaveModal={showSaveModal}
         onCloseSaveModal={() => {
           setShowSaveModal(false);
           setPendingRecordingFile(null);
         }}
+        showSaveSuccess={showSaveSuccess}
+        onCloseSaveSuccess={() => setShowSaveSuccess(false)}
         onSaveRecording={
           controlsEnabled
             ? async (filename) => {
-                if (!pendingRecordingFile) return;
-                try {
-                  const ext = pendingRecordingFile.name.split('.').pop() || 'webm';
-                  const safeBase = filename.trim().replace(/[\\/:*?"<>|]/g, '-');
-                  const finalName = safeBase.endsWith(`.${ext}`) ? safeBase : `${safeBase}.${ext}`;
+              if (!pendingRecordingFile) return;
+              try {
+                const ext = pendingRecordingFile.name.split('.').pop() || 'webm';
+                const safeBase = filename.trim().replace(/[\\/:*?"<>|]/g, '-');
+                const finalName = safeBase.endsWith(`.${ext}`) ? safeBase : `${safeBase}.${ext}`;
 
-                  const finalFile = new File([pendingRecordingFile], finalName, {
-                    type: pendingRecordingFile.type,
-                  });
+                const finalFile = new File([pendingRecordingFile], finalName, {
+                  type: pendingRecordingFile.type,
+                });
 
-                  await uploadRecording(finalFile);
+                await uploadRecording(finalFile, pendingRecordingDuration);
 
-                  setShowSaveModal(false);
-                  setPendingRecordingFile(null);
-                } catch (e) {
-                  console.error('upload failed', e);
-                }
+                setShowSaveModal(false);
+                setPendingRecordingFile(null);
+                setPendingRecordingDuration(0);
+                setShowSaveSuccess(true);
+              } catch (e) {
+                console.error('upload failed', e);
               }
-            : async () => {}
+            }
+            : async () => { }
         }
         onToggleRecord={
           controlsEnabled
             ? async () => {
-                try {
-                  if (!audioEngine.recorder.isRecording()) {
-                    await audioEngine.recorder.start();
-                    setIsRecording(true);
-                    return;
-                  }
-
-                  const blob = await audioEngine.recorder.stop();
-                  setIsRecording(false);
-
-                  const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
-                  const tmpName = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
-                  const file = new File([blob], tmpName, { type: blob.type || `audio/${ext}` });
-
-                  setPendingRecordingFile(file);
-                  setShowSaveModal(true);
-                } catch (err) {
-                  console.error('[record] failed', err);
-                  setIsRecording(audioEngine.recorder.isRecording());
+              try {
+                if (!audioEngine.recorder.isRecording()) {
+                  await audioEngine.recorder.start();
+                  recordingStartTime.current = Date.now();
+                  setIsRecording(true);
+                  return;
                 }
+
+                const blob = await audioEngine.recorder.stop();
+                const dur = (Date.now() - recordingStartTime.current) / 1000;
+                setPendingRecordingDuration(dur);
+
+                setIsRecording(false);
+                audioEngine.stopAll();
+
+                const ext = blob.type.includes('ogg') ? 'ogg' : 'webm';
+                const tmpName = `keydrop-recording-${new Date().toISOString().replace(/[:.]/g, '-')}.${ext}`;
+                const file = new File([blob], tmpName, { type: blob.type || `audio/${ext}` });
+
+                setPendingRecordingFile(file);
+                setShowSaveModal(true);
+              } catch (err) {
+                console.error('[record] failed', err);
+                setIsRecording(audioEngine.recorder.isRecording());
               }
-            : async () => {}
+            }
+            : async () => { }
         }
         // viewer면 라이브러리 패널 숨김
-        libraryElement={viewerMode ? null : <LibraryPanel />}
+        libraryElement={viewerMode ? <AudioVisualizer /> : <LibraryPanel />}
         // DJHeader/DJLayout에서 viewerMode UI 잠금에 쓰고 싶으면 같이 넘겨도 됨
         viewerMode={viewerMode as any}
       />
