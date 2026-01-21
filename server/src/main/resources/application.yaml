@@ -44,6 +44,6 @@ google:
   client-secret: ${GOOGLE_CLIENT_SECRET:}
 
 livekit:
-  url: wss://keydrop-iuz4ma6a.livekit.cloud
-  apiKey: APIi6jzaK2yXKJ3
-  apiSecret: HMeCTNDDF02jBeegfTelUZhwDD87mvLCvB6XZhkLcZ9A
+  url: ${LIVEKIT_URL}
+  apiKey: ${LIVEKIT_API_KEY}
+  apiSecret: ${LIVEKIT_API_SECRET}

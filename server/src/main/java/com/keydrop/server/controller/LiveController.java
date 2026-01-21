@@ -1,14 +1,17 @@
 package com.keydrop.server.controller;
 
-import lombok.RequiredArgsConstructor;
+import com.keydrop.server.service.LiveService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/live")
 public class LiveController {
 
   private final LiveService liveService;
+
+  public LiveController(LiveService liveService) {
+    this.liveService = liveService;
+  }
 
   @PostMapping("/token")
   public TokenResponse token(@RequestBody TokenRequest req) {
