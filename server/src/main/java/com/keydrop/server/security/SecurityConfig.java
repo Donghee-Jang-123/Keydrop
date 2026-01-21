@@ -22,6 +22,8 @@ public class SecurityConfig {
       .cors(Customizer.withDefaults())
       .httpBasic(httpBasic -> httpBasic.disable())
       .formLogin(form -> form.disable())
+      // 정적 자원(오디오 등)을 다른 도메인(Vercel)에서 로드할 수 있도록 CORP 설정 완화
+      .headers(headers -> headers.crossOriginResourcePolicy(p -> p.disable()))
       .authorizeHttpRequests(auth -> auth
         // 프리플라이트 무조건 허용
         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
