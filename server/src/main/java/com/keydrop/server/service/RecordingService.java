@@ -18,7 +18,7 @@ public class RecordingService {
     this.repo = repo;
   }
 
-  public RecordingDto create(MultipartFile file, Long userId) {
+  public RecordingDto create(MultipartFile file, Double durationSec, Long userId) {
     if (file == null || file.isEmpty()) throw new IllegalArgumentException("file is required");
     if (userId == null) throw new IllegalArgumentException("userId is required");
 
@@ -37,6 +37,7 @@ public class RecordingService {
         .fileName(fileName)
         .contentType(contentType)
         .sizeBytes((long) bytes.length)
+        .durationSec(durationSec != null ? durationSec : 0.0)
         .audioData(bytes)
         .build());
 
@@ -63,6 +64,7 @@ public class RecordingService {
         r.getFileName(),
         r.getContentType(),
         r.getSizeBytes(),
+        r.getDurationSec(),
         r.getCreatedAt(),
         "/api/recordings/" + r.getRecordingId() + "/file"
     );

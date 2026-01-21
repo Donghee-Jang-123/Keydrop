@@ -9,9 +9,12 @@ export type RecordingUploadResponse = {
   fileUrl: string; // /api/recordings/{id}/file
 };
 
-export async function uploadRecording(file: File): Promise<RecordingUploadResponse> {
+export async function uploadRecording(file: File, durationSec?: number): Promise<RecordingUploadResponse> {
   const form = new FormData();
   form.append("file", file);
+  if (durationSec !== undefined) {
+    form.append("duration", durationSec.toString());
+  }
 
   const { data } = await api.post<RecordingUploadResponse>("/api/recordings", form, {
     headers: {

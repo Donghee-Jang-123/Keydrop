@@ -7,6 +7,7 @@ public record RecordingDto(
     String fileName,
     String contentType,
     long sizeBytes,
+    Double durationSec,
     LocalDateTime createdAt,
     String fileUrl
 ) {}

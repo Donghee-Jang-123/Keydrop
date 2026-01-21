@@ -154,7 +154,6 @@ const DJHeader: React.FC<DJHeaderProps> = ({
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
     } catch {
-      window.prompt("복사해서 공유하세요: ", liveUrl);
     }
   };
 

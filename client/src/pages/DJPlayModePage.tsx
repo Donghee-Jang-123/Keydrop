@@ -59,6 +59,8 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [pendingRecordingFile, setPendingRecordingFile] = useState<File | null>(null);
+  const [pendingRecordingDuration, setPendingRecordingDuration] = useState<number>(0);
+  const recordingStartTime = useRef<number>(0);
 
   useEffect(() => {
     if (!controlsEnabled) return; // viewer면 file picker 트리거도 막기
@@ -223,10 +225,11 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
                   type: pendingRecordingFile.type,
                 });
 
-                await uploadRecording(finalFile);
+                await uploadRecording(finalFile, pendingRecordingDuration);
 
                 setShowSaveModal(false);
                 setPendingRecordingFile(null);
+                setPendingRecordingDuration(0);
                 setShowSaveSuccess(true);
               } catch (e) {
                 console.error('upload failed', e);
@@ -240,11 +243,15 @@ export default function DJPlayModePage({ viewerMode = false }: Props) {
               try {
                 if (!audioEngine.recorder.isRecording()) {
                   await audioEngine.recorder.start();
+                  recordingStartTime.current = Date.now();
                   setIsRecording(true);
                   return;
                 }
 
                 const blob = await audioEngine.recorder.stop();
+                const dur = (Date.now() - recordingStartTime.current) / 1000;
+                setPendingRecordingDuration(dur);
+
                 setIsRecording(false);
                 audioEngine.stopAll();
 

@@ -33,6 +33,9 @@ public class Recording {
   @Column(name = "size_bytes", nullable = false)
   private Long sizeBytes;
 
+  @Column(name = "duration_sec", nullable = false)
+  private Double durationSec;
+
   @Column(name = "created_at", nullable = false)
   @Builder.Default
   private LocalDateTime createdAt = LocalDateTime.now();

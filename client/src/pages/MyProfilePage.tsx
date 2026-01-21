@@ -124,8 +124,8 @@ export default function MyProfilePage() {
           }}
           style={{
             position: "absolute",
-            top: 20,
-            right: 22,
+            top: 28,
+            right: 28,
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
